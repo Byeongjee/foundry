@@ -19,7 +19,7 @@ use crate::client::ConsensusClient;
 use crate::consensus::bit_set::BitSet;
 use crate::consensus::stake::{CurrentValidators, NextValidators, PreviousValidators, Validator};
 use crate::consensus::EngineError;
-use ckey::{public_to_address, Address, Public};
+use ckey::{public_to_address, Address, BLSPublic};
 use ctypes::util::unexpected::OutOfBounds;
 use ctypes::BlockHash;
 use parking_lot::RwLock;
@@ -32,7 +32,7 @@ pub struct DynamicValidator {
 }
 
 impl DynamicValidator {
-    pub fn new(initial_validators: Vec<Public>) -> Self {
+    pub fn new(initial_validators: Vec<(Address, BLSPublic)>) -> Self {
         DynamicValidator {
             initial_list: RoundRobinValidator::new(initial_validators),
             client: Default::default(),
@@ -108,15 +108,15 @@ impl DynamicValidator {
         }
     }
 
-    fn validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
+    fn validators_pubkey(&self, hash: BlockHash) -> Option<Vec<BLSPublic>> {
         self.next_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
     }
 
-    fn current_validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
+    fn current_validators_pubkey(&self, hash: BlockHash) -> Option<Vec<BLSPublic>> {
         self.current_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
     }
 
-    fn previous_validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
+    fn previous_validators_pubkey(&self, hash: BlockHash) -> Option<Vec<BLSPublic>> {
         self.previous_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
     }
 
@@ -130,7 +130,7 @@ impl DynamicValidator {
         }
     }
 
-    pub fn get_current(&self, hash: &BlockHash, index: usize) -> Option<Public> {
+    pub fn get_current(&self, hash: &BlockHash, index: usize) -> Option<BLSPublic> {
         let validators = self.current_validators_pubkey(*hash)?;
         let n_validators = validators.len();
         Some(*validators.get(index % n_validators).unwrap())
@@ -170,7 +170,7 @@ impl DynamicValidator {
 }
 
 impl ValidatorSet for DynamicValidator {
-    fn contains(&self, parent: &BlockHash, public: &Public) -> bool {
+    fn contains(&self, parent: &BlockHash, public: &BLSPublic) -> bool {
         if let Some(validators) = self.validators_pubkey(*parent) {
             validators.into_iter().any(|pubkey| pubkey == *public)
         } else {
@@ -186,7 +186,7 @@ impl ValidatorSet for DynamicValidator {
         }
     }
 
-    fn get(&self, parent: &BlockHash, index: usize) -> Public {
+    fn get(&self, parent: &BlockHash, index: usize) -> BLSPublic {
         if let Some(validators) = self.validators_pubkey(*parent) {
             let n_validators = validators.len();
             *validators.get(index % n_validators).unwrap()
@@ -195,7 +195,11 @@ impl ValidatorSet for DynamicValidator {
         }
     }
 
-    fn get_index(&self, parent: &BlockHash, public: &Public) -> Option<usize> {
+    fn get_address(&self, parent: &BlockHash, index: usize) -> Address {
+
+    }
+
+    fn get_index(&self, parent: &BlockHash, public: &BLSPublic) -> Option<usize> {
         if let Some(validators) = self.validators_pubkey(*parent) {
             validators.into_iter().enumerate().find(|(_index, pubkey)| pubkey == public).map(|(index, _)| index)
         } else {

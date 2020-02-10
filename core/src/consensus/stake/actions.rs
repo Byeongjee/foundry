@@ -17,7 +17,7 @@
 use crate::client::ConsensusClient;
 use crate::consensus::{ConsensusMessage, ValidatorSet};
 use ccrypto::Blake;
-use ckey::{recover, Address, Signature};
+use ckey::{recover, Address, Signature, sign_bls};
 use ctypes::errors::SyntaxError;
 use ctypes::CommonParams;
 use primitives::{Bytes, H256};
@@ -375,7 +375,6 @@ mod tests {
     use super::*;
     use crate::client::TestBlockChainClient;
     use crate::consensus::{ConsensusMessage, DynamicValidator, Step, VoteOn, VoteStep};
-    use ckey::sign_schnorr;
     use ctypes::BlockHash;
     use rlp::rlp_encode_and_decode_test;
 
@@ -440,7 +439,7 @@ mod tests {
         let reversed_idx = client.get_validators().len() - 1 - signer_index;
         let pubkey = *client.get_validators().get(reversed_idx).unwrap().pubkey();
         let privkey = *client.validator_keys.read().get(&pubkey).unwrap();
-        let signature = sign_schnorr(&privkey, &twisted.hash()).unwrap();
+        let signature = sign_bls(&privkey, &twisted.hash());
 
         ConsensusMessage {
             signature,

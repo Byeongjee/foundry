@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ckey::{
-    sign, sign_schnorr, Error as KeyError, KeyPair, Message, Private, Public, SchnorrSignature, Secret, Signature,
+    sign, sign_bls, Error as KeyError, KeyPair, Message, Private, Public, BLSSignature, BLSPrivate, Secret, Signature,
 };
 
 /// An opaque wrapper for secret.
@@ -37,8 +37,8 @@ impl DecryptedAccount {
     }
 
     /// Sign a message with Schnorr scheme.
-    pub fn sign_schnorr(&self, message: &Message) -> Result<SchnorrSignature, KeyError> {
-        sign_schnorr(&Private::from(self.secret), message)
+    pub fn sign_bls(&self, message: &Message) -> BLSSignature {
+        sign_bls(&BLSPrivate::from(self.secret), message)
     }
 
     /// Derive public key.

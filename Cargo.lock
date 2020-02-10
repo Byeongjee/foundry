@@ -1859,7 +1859,7 @@ dependencies = [
 [[package]]
 name = "pairing-plus"
 version = "0.17.1"
-source = "git+https://github.com/Byeongjee/pairing-plus#6a0bb20de265650994177c49e1556bdaa3df85b6"
+source = "git+https://github.com/Byeongjee/pairing-plus#b67ae67693f9dc9885e728034cf772b87b91778d"
 dependencies = [
  "byteorder",
  "ff",

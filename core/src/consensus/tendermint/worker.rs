@@ -39,7 +39,7 @@ use crate::transaction::{SignedTransaction, UnverifiedTransaction};
 use crate::types::BlockStatus;
 use crate::views::BlockView;
 use crate::BlockId;
-use ckey::{public_to_address, verify_schnorr, Address, SchnorrSignature};
+use ckey::{public_to_address, Address, BLSSignature, aggregate_signatures_bls, verify_aggregated_bls};
 use cnetwork::{EventSender, NodeId};
 use crossbeam_channel as crossbeam;
 use ctypes::transaction::{Action, Transaction};
@@ -140,7 +140,7 @@ pub enum Event {
     },
     Restore(crossbeam::Sender<()>),
     ProposalBlock {
-        signature: SchnorrSignature,
+        signature: BLSSignature,
         view: View,
         message: Bytes,
         result: crossbeam::Sender<Option<Arc<dyn ConsensusClient>>>,
@@ -474,7 +474,7 @@ impl Worker {
         self.validators.next_block_proposer(prev_block_hash, view)
     }
 
-    fn first_proposal_at(&self, height: Height, view: View) -> Option<(SchnorrSignature, usize, Bytes)> {
+    fn first_proposal_at(&self, height: Height, view: View) -> Option<(BLSSignature, usize, Bytes)> {
         let vote_step = VoteStep {
             height,
             view,
@@ -1126,11 +1126,12 @@ impl Worker {
             .votes
             .round_signatures_and_indices(&VoteStep::new(height - 1, *last_block_view, Step::Precommit), &parent_hash);
         ctrace!(ENGINE, "Collected seal: {:?}({:?})", precommits, precommit_indices);
+        let precommit_signature = aggregate_signatures_bls(&precommits);
         let precommit_bitset = BitSet::new_with_indices(&precommit_indices);
         Seal::Tendermint {
             prev_view: *last_block_view,
             cur_view: view,
-            precommits,
+            precommit_signature,
             precommit_bitset,
         }
     }
@@ -1214,7 +1215,7 @@ impl Worker {
         ctrace!(ENGINE, "Verify external at {}-{}, {:?}", height, author_view, header);
         let proposer = header.author();
         if !self.is_authority(header.parent_hash(), proposer) {
-            return Err(EngineError::BlockNotAuthorized(*proposer).into())
+            return Err(EngineError::BlockAuthorNotAuthorized(*proposer).into())
         }
         self.check_view_proposer(header.parent_hash(), header.number(), author_view, &proposer)?;
         let seal_view = TendermintSealView::new(header.seal());
@@ -1245,28 +1246,28 @@ impl Worker {
             block_hash: Some(*header.parent_hash()),
         };
 
-        let mut voted_validators = BitSet::new();
         let parent_hash = header.parent_hash();
         let grand_parent_hash =
             self.client().block_header(&(*parent_hash).into()).expect("The parent block must exist").parent_hash();
-        for (bitset_index, signature) in seal_view.signatures()? {
-            let public = match self.validators.get_current(header.parent_hash(), bitset_index) {
+
+        let precommit_signature = seal_view.precommit_signature()?;
+        let precommit_bitset = seal_view.bitset()?;
+        let voted_validator_publics: Vec<_> = precommit_bitset.true_index_iter().map(|bitset_idx| 
+            match self.validators.get_current(parent_hash, bitset_idx) {
                 Some(p) => p,
-                None => self.validators.get(&grand_parent_hash, bitset_index),
-            };
-            if !verify_schnorr(&public, &signature, &precommit_vote_on.hash())? {
-                let address = public_to_address(&public);
-                return Err(EngineError::BlockNotAuthorized(address.to_owned()).into())
+                None => self.validators.get(&grand_parent_hash, bitset_idx),
             }
-            assert!(!voted_validators.is_set(bitset_index), "Double vote");
-            voted_validators.set(bitset_index);
+        ).collect();
+
+        if !verify_aggregated_bls(&voted_validator_publics, &precommit_signature, &precommit_vote_on.hash())? {
+            return Err(EngineError::PrecommitSignatureNotAuthorized.into())
         }
 
         // Genesisblock does not have signatures
         if header.number() == 1 {
             return Ok(())
         }
-        self.validators.check_enough_votes_with_current(&parent_hash, &voted_validators)?;
+        self.validators.check_enough_votes_with_current(&parent_hash, &precommit_bitset)?;
         Ok(())
     }
 
@@ -1615,7 +1616,7 @@ impl Worker {
         &self,
         header: &Header,
         proposed_view: View,
-        signature: SchnorrSignature,
+        signature: BLSSignature,
     ) -> Option<ConsensusMessage> {
         let prev_proposer_idx = self.block_proposer_idx(*header.parent_hash())?;
         let signer_index =
@@ -1723,7 +1724,7 @@ impl Worker {
 
     fn send_proposal_block(
         &self,
-        signature: SchnorrSignature,
+        signature: BLSSignature,
         view: View,
         message: Bytes,
         result: crossbeam::Sender<Bytes>,
@@ -1783,7 +1784,7 @@ impl Worker {
 
     fn on_proposal_message(
         &mut self,
-        signature: SchnorrSignature,
+        signature: BLSSignature,
         proposed_view: View,
         bytes: Bytes,
     ) -> Option<Arc<dyn ConsensusClient>> {

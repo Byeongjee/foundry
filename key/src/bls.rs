@@ -19,11 +19,24 @@ use bls_sigs_ref::{BLSSigCore, BLSSignatureBasic};
 use pairing_plus::bls12_381::{Fr, G1Compressed, G2Compressed, G1, G2};
 use pairing_plus::{CurveAffine, CurveProjective, EncodedPoint};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use primitives::H256;
+use std::hash::{Hash, Hasher};
+use std::cmp::Ordering;
+use rand_xorshift::XorShiftRng;
 
 #[derive(Copy, Clone, Debug)]
 pub struct BLSSignature(G1Compressed);
 
 impl BLSSignature {
+    pub fn random(rng: XorShiftRng) -> Self {
+        let mut rng = rand_xorshift::XorShiftRng::from_seed([
+            0x59, 0x62, 0xbe, 0x5d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06,
+            0xbc, 0xe5,
+        ]);
+        let random_g1 = G1::random(&mut rng).into_affine().into_compressed();
+        BLSSignature(random_g1)
+    }
+
     fn g1(&self) -> Result<G1, Error> {
         match self.0.into_affine() {
             Ok(signature) => Ok(signature.into_projective()),
@@ -33,11 +46,25 @@ impl BLSSignature {
 }
 
 impl PartialEq for BLSSignature {
-    fn eq(&self, other: &BLSSignature) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self.0.as_ref() == other.0.as_ref()
     }
 }
 
+impl Eq for BLSSignature {}
+
+impl Hash for BLSSignature {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.as_ref().hash(state);
+    }
+}
+
+impl Default for BLSSignature {
+    fn default() -> Self {
+        let g1 = G1::one();
+        BLSSignature::from(g1)
+    }
+}
 impl Encodable for BLSSignature {
     fn rlp_append(&self, s: &mut RlpStream) {
         let data: &[u8] = self.0.as_ref();
@@ -85,6 +112,32 @@ impl From<G2> for BLSPublic {
     }
 }
 
+impl PartialEq for BLSPublic {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl Eq for BLSPublic {}
+
+impl Hash for BLSPublic {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.as_ref().hash(state);
+    }
+}
+
+impl Ord for BLSPublic {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+
+impl PartialOrd for BLSPublic {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 impl Encodable for BLSPublic {
     fn rlp_append(&self, s: &mut RlpStream) {
         let data: &[u8] = self.0.as_ref();
@@ -107,6 +160,13 @@ impl Decodable for BLSPublic {
 }
 
 pub struct BLSPrivate(Fr);
+
+impl From<H256> for BLSPrivate {
+    fn from(msg: H256) -> Self {
+        let (private, _public) = <G1 as BLSSigCore>::keygen(msg);
+        BLSPrivate(private)
+    }
+}
 
 pub fn sign_bls(private: &BLSPrivate, message: &Message) -> BLSSignature {
     let signature = <G1 as BLSSignatureBasic>::sign(private.0, message);
