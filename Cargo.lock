@@ -144,6 +144,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bls_sigs_ref"
+version = "0.1.0"
+source = "git+https://github.com/Byeongjee/bls_sigs_ref.git#89a42a0cdf0ef900782aa317b7f509041116f31c"
+dependencies = [
+ "ff",
+ "hkdf",
+ "pairing-plus",
+ "sha2",
+]
+
+[[package]]
 name = "byte-tools"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -277,7 +288,7 @@ dependencies = [
  "parking_lot 0.6.4",
  "primitives",
  "rand 0.6.1",
- "rand_xorshift",
+ "rand_xorshift 0.1.0",
  "rlp",
  "rlp_compress",
  "rlp_derive",
@@ -355,13 +366,15 @@ name = "codechain-key"
 version = "0.1.0"
 dependencies = [
  "bech32",
+ "bls_sigs_ref",
  "codechain-crypto",
  "lazy_static 1.2.0",
  "never-type",
+ "pairing-plus",
  "parking_lot 0.6.4",
  "primitives",
  "rand 0.6.1",
- "rand_xorshift",
+ "rand_xorshift 0.1.0",
  "rlp",
  "rustc-hex 1.0.0",
  "rustc-serialize",
@@ -676,6 +689,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
+name = "crypto-mac"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4434400df11d95d556bac068ddfedd482915eb18fe8bea89bc80b6e4b1c179e5"
+dependencies = [
+ "generic-array",
+ "subtle",
+]
+
+[[package]]
 name = "ctrlc"
 version = "1.1.1"
 source = "git+https://github.com/paritytech/rust-ctrlc.git#b523017108bb2d571a7a69bd97bc406e63bc7a9d"
@@ -845,7 +868,7 @@ dependencies = [
  "proc-macro2 0.4.30",
  "quote 0.6.12",
  "syn 0.15.34",
- "synstructure",
+ "synstructure 0.10.2",
 ]
 
 [[package]]
@@ -861,6 +884,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1ee15a7050e5580b3712877157068ea713b245b080ff302ae2ca973cfcd9baa"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "ff"
+version = "0.5.1"
+source = "git+https://github.com/algorand/ff#28a245188d1ecd037493ff2169bac60bb6f91d73"
+dependencies = [
+ "byteorder",
+ "ff_derive",
+ "rand_core 0.5.1",
+ "zeroize",
+]
+
+[[package]]
+name = "ff_derive"
+version = "0.4.0"
+source = "git+https://github.com/algorand/ff#28a245188d1ecd037493ff2169bac60bb6f91d73"
+dependencies = [
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "proc-macro2 1.0.6",
+ "quote 1.0.2",
+ "syn 1.0.7",
 ]
 
 [[package]]
@@ -1100,6 +1147,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "307c3c9f937f38e3534b1d6447ecf090cafcc9744e4a6360e8b037b2cf5af120"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "hkdf"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3fa08a006102488bd9cd5b8013aabe84955cf5ae22e304c2caf655b633aefae3"
+dependencies = [
+ "digest",
+ "hmac",
+]
+
+[[package]]
+name = "hmac"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5dcb5e64cda4c23119ab41ba960d1e170a774c8e4b9d9e6a9bc18aabf5e59695"
+dependencies = [
+ "crypto-mac",
+ "digest",
 ]
 
 [[package]]
@@ -1790,6 +1857,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "pairing-plus"
+version = "0.17.1"
+source = "git+https://github.com/Byeongjee/pairing-plus#6a0bb20de265650994177c49e1556bdaa3df85b6"
+dependencies = [
+ "byteorder",
+ "ff",
+ "hkdf",
+ "rand 0.4.3",
+ "rand_core 0.5.1",
+ "rand_xorshift 0.2.0",
+ "sha2",
+ "zeroize",
+]
+
+[[package]]
 name = "panic_hook"
 version = "0.1.0"
 dependencies = [
@@ -2112,7 +2194,7 @@ dependencies = [
  "rand_hc 0.1.0",
  "rand_isaac",
  "rand_pcg",
- "rand_xorshift",
+ "rand_xorshift 0.1.0",
  "rustc_version",
  "winapi 0.3.6",
 ]
@@ -2218,6 +2300,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "effa3fcaa47e18db002bdde6060944b6d2f9cfd8db471c30e873448ad9187be3"
 dependencies = [
  "rand_core 0.2.2",
+]
+
+[[package]]
+name = "rand_xorshift"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77d416b86801d23dde1aa643023b775c3a462efc0ed96443add11546cdf1dca8"
+dependencies = [
+ "rand_core 0.5.1",
 ]
 
 [[package]]
@@ -2550,6 +2641,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha2"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27044adfd2e1f077f649f59deb9490d3941d674002f7d062870a60ebe9bd47a0"
+dependencies = [
+ "block-buffer",
+ "digest",
+ "fake-simd",
+ "opaque-debug",
+]
+
+[[package]]
 name = "shell32-sys"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2655,6 +2758,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb4f380125926a99e52bc279241539c018323fab05ad6368b56f93d9369ff550"
 
 [[package]]
+name = "subtle"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d67a5a62ba6e01cb2192ff309324cb4875d0c451d55fe2319433abe7a05a8ee"
+
+[[package]]
 name = "syn"
 version = "0.13.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2697,6 +2806,18 @@ dependencies = [
  "quote 0.6.12",
  "syn 0.15.34",
  "unicode-xid 0.1.0",
+]
+
+[[package]]
+name = "synstructure"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67656ea1dc1b41b1451851562ea232ec2e5a80242139f7e679ceccfb5d61f545"
+dependencies = [
+ "proc-macro2 1.0.6",
+ "quote 1.0.2",
+ "syn 1.0.7",
+ "unicode-xid 0.2.0",
 ]
 
 [[package]]
@@ -3342,3 +3463,24 @@ name = "yaml-rust"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e66366e18dc58b46801afbf2ca7661a9f59cc8c5962c29892b6039b4f86fa992"
+
+[[package]]
+name = "zeroize"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3cbac2ed2ba24cc90f5e06485ac8c7c1e5449fe8911aef4d8877218af021a5b8"
+dependencies = [
+ "zeroize_derive",
+]
+
+[[package]]
+name = "zeroize_derive"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de251eec69fc7c1bc3923403d18ececb929380e016afe103da75f396704f8ca2"
+dependencies = [
+ "proc-macro2 1.0.6",
+ "quote 1.0.2",
+ "syn 1.0.7",
+ "synstructure 0.12.3",
+]
