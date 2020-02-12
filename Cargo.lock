@@ -286,10 +286,10 @@ dependencies = [
  "merkle-trie",
  "num-rational",
  "parking_lot 0.6.4",
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "rand 0.6.1",
  "rand_xorshift 0.1.0",
- "rlp",
+ "rlp 0.4.0 (git+https://github.com/Byeongjee/rlp.git)",
  "rlp_compress",
  "rlp_derive",
  "snap",
@@ -301,7 +301,7 @@ name = "codechain-crypto"
 version = "0.1.0"
 source = "git+https://github.com/CodeChain-io/rust-codechain-crypto.git#0e2cc259dbc0c50a67ad267d8d42ad940345bf29"
 dependencies = [
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "quick-error",
  "ring",
  "rust-crypto",
@@ -315,8 +315,8 @@ dependencies = [
  "codechain-crypto",
  "kvdb",
  "plain_hasher",
- "primitives",
- "rlp",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
+ "rlp 0.4.0 (git+https://github.com/CodeChain-io/rlp.git)",
 ]
 
 [[package]]
@@ -332,9 +332,9 @@ dependencies = [
  "log 0.4.6",
  "never-type",
  "parking_lot 0.6.4",
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "rand 0.6.1",
- "rlp",
+ "rlp 0.4.0 (git+https://github.com/Byeongjee/rlp.git)",
  "time",
 ]
 
@@ -354,7 +354,7 @@ name = "codechain-json"
 version = "0.1.0"
 dependencies = [
  "codechain-key",
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "rustc-hex 1.0.0",
  "serde",
  "serde_derive",
@@ -372,10 +372,10 @@ dependencies = [
  "never-type",
  "pairing-plus",
  "parking_lot 0.6.4",
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/Byeongjee/rust-codechain-primitives.git)",
  "rand 0.6.1",
  "rand_xorshift 0.1.0",
- "rlp",
+ "rlp 0.4.0 (git+https://github.com/Byeongjee/rlp.git)",
  "rustc-hex 1.0.0",
  "rustc-serialize",
  "secp256k1",
@@ -396,7 +396,7 @@ dependencies = [
  "log 0.4.6",
  "matches",
  "parking_lot 0.6.4",
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "rand 0.6.1",
  "rustc-hex 1.0.0",
  "serde",
@@ -442,9 +442,9 @@ dependencies = [
  "mio",
  "never-type",
  "parking_lot 0.6.4",
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "rand 0.6.1",
- "rlp",
+ "rlp 0.4.0 (git+https://github.com/Byeongjee/rlp.git)",
  "rlp_derive",
  "table",
  "time",
@@ -474,9 +474,9 @@ dependencies = [
  "lazy_static 1.2.0",
  "log 0.4.6",
  "parking_lot 0.6.4",
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "rand 0.6.1",
- "rlp",
+ "rlp 0.4.0 (git+https://github.com/Byeongjee/rlp.git)",
  "rustc-hex 1.0.0",
  "rustc-serialize",
  "serde",
@@ -501,8 +501,8 @@ dependencies = [
  "lru-cache",
  "merkle-trie",
  "parking_lot 0.6.4",
- "primitives",
- "rlp",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
+ "rlp 0.4.0 (git+https://github.com/Byeongjee/rlp.git)",
  "rlp_derive",
  "rustc-hex 1.0.0",
 ]
@@ -526,9 +526,9 @@ dependencies = [
  "merkle-trie",
  "never-type",
  "parking_lot 0.6.4",
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "rand 0.6.1",
- "rlp",
+ "rlp 0.4.0 (git+https://github.com/Byeongjee/rlp.git)",
  "snap",
  "tempfile",
  "time",
@@ -552,8 +552,8 @@ dependencies = [
  "codechain-crypto",
  "codechain-json",
  "codechain-key",
- "primitives",
- "rlp",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
+ "rlp 0.4.0 (git+https://github.com/Byeongjee/rlp.git)",
  "rlp_derive",
  "serde",
  "serde_derive",
@@ -567,8 +567,8 @@ dependencies = [
  "codechain-crypto",
  "codechain-key",
  "codechain-types",
- "primitives",
- "rlp",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
+ "rlp 0.4.0 (git+https://github.com/Byeongjee/rlp.git)",
  "secp256k1",
 ]
 
@@ -980,7 +980,7 @@ dependencies = [
  "never-type",
  "panic_hook",
  "parking_lot 0.6.4",
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "rpassword",
  "rustc-serialize",
  "serde",
@@ -1274,6 +1274,15 @@ dependencies = [
  "matches",
  "unicode-bidi",
  "unicode-normalization",
+]
+
+[[package]]
+name = "impl-serde"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5bbe9ea9b182f0fb1cabbd61f4ff9b7b7b9197955e95a7e4c27de5055eb29ff8"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -1589,9 +1598,9 @@ source = "git+https://github.com/CodeChain-io/rust-merkle-trie.git#a4400e98af624
 dependencies = [
  "codechain-crypto",
  "codechain-db",
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "rand 0.6.1",
- "rlp",
+ "rlp 0.4.0 (git+https://github.com/CodeChain-io/rlp.git)",
  "rlp_derive",
  "snap",
 ]
@@ -2062,6 +2071,16 @@ checksum = "e3cbf9f658cdb5000fcf6f362b8ea2ba154b9f146a61c7a20d647034c6b6561b"
 [[package]]
 name = "primitives"
 version = "0.4.0"
+source = "git+https://github.com/Byeongjee/rust-codechain-primitives.git#2553e59da4bf8f6c8dbb7b3747536596bb531552"
+dependencies = [
+ "ethereum-types",
+ "fixed-hash",
+ "impl-serde",
+]
+
+[[package]]
+name = "primitives"
+version = "0.4.0"
 source = "git+https://github.com/CodeChain-io/rust-codechain-primitives.git#eb8da500a77fa84e53750e8661a8603a78a2a7b3"
 dependencies = [
  "ethereum-types",
@@ -2397,9 +2416,18 @@ dependencies = [
 [[package]]
 name = "rlp"
 version = "0.4.0"
+source = "git+https://github.com/Byeongjee/rlp.git#6a4c2c39f76eba2b3b68863941cd64fddee3e5cc"
+dependencies = [
+ "primitives 0.4.0 (git+https://github.com/Byeongjee/rust-codechain-primitives.git)",
+ "rustc-hex 1.0.0",
+]
+
+[[package]]
+name = "rlp"
+version = "0.4.0"
 source = "git+https://github.com/CodeChain-io/rlp.git#64fdbc5758e05483f62fae99521520f566eaca9d"
 dependencies = [
- "primitives",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
  "rustc-hex 1.0.0",
 ]
 
@@ -2409,7 +2437,7 @@ version = "0.2.0"
 source = "git+https://github.com/CodeChain-io/rlp.git#339cc6aa02d91635199178e7c7be07b347054697"
 dependencies = [
  "lazy_static 1.2.0",
- "rlp",
+ "rlp 0.4.0 (git+https://github.com/CodeChain-io/rlp.git)",
 ]
 
 [[package]]
@@ -3174,8 +3202,8 @@ version = "0.2.0"
 source = "git+https://github.com/CodeChain-io/trie-standardmap.git#f2cdd24acb7f00e44566d86af6102c5d16b02921"
 dependencies = [
  "codechain-crypto",
- "primitives",
- "rlp",
+ "primitives 0.4.0 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
+ "rlp 0.4.0 (git+https://github.com/CodeChain-io/rlp.git)",
 ]
 
 [[package]]
