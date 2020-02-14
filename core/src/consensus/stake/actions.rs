@@ -375,7 +375,6 @@ mod tests {
     use super::*;
     use crate::client::TestBlockChainClient;
     use crate::consensus::{ConsensusMessage, DynamicValidator, Step, VoteOn, VoteStep};
-    use ckey::sign_schnorr;
     use ctypes::BlockHash;
     use rlp::rlp_encode_and_decode_test;
 
@@ -440,7 +439,7 @@ mod tests {
         let reversed_idx = client.get_validators().len() - 1 - signer_index;
         let pubkey = *client.get_validators().get(reversed_idx).unwrap().pubkey();
         let privkey = *client.validator_keys.read().get(&pubkey).unwrap();
-        let signature = sign_schnorr(&privkey, &twisted.hash()).unwrap();
+        let signature = sign_bls(&privkey, &twisted.hash());
 
         ConsensusMessage {
             signature,
@@ -461,8 +460,9 @@ mod tests {
         let mut test_client = TestBlockChainClient::default();
         test_client.add_blocks(10, 1);
         test_client.set_random_validators(10);
-        let validator_set =
-            DynamicValidator::new(test_client.get_validators().iter().map(|val| *val.pubkey()).collect());
+        let validators: Vec<(Address, BLSPublic)> =
+            test_client.get_validators().iter().map(|val| (*val.address(), *val.pubkey())).collect();
+        let validator_set = DynamicValidator::new(validators);
 
         let consensus_message1 =
             create_consensus_message(message_info1, &test_client, vote_step_twister, block_hash_twister);
