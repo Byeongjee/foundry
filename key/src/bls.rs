@@ -280,6 +280,14 @@ impl BLSKeyPair {
         }
     }
 
+    pub fn generate_keypair<B: AsRef<[u8]>>(secret: B) -> Self {
+        let (x_prime, pk) = G1::keygen(secret);
+        BLSKeyPair {
+            private: BLSPrivate(x_prime),
+            public: BLSPublic::from(pk),
+        }
+    }
+
     pub fn private(&self) -> &BLSPrivate {
         &self.private
     }
