@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::CUSTOM_ACTION_HANDLER_ID;
-use ckey::{public_to_address, Address, Public};
+use ckey::{Address, BLSPublic};
 use cstate::{ActionData, ActionDataKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::RuntimeError;
 use primitives::{Bytes, H256};
@@ -233,30 +233,33 @@ impl<'a> Delegation<'a> {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, RlpDecodable, RlpEncodable)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, RlpDecodable, RlpEncodable, Hash)]
 pub struct Validator {
     weight: StakeQuantity,
     delegation: StakeQuantity,
     deposit: Deposit,
-    pubkey: Public,
+    pubkey: BLSPublic,
+    address: Address,
 }
 
 impl Validator {
-    pub fn new_for_test(delegation: StakeQuantity, deposit: Deposit, pubkey: Public) -> Self {
+    pub fn new_for_test(delegation: StakeQuantity, deposit: Deposit, pubkey: BLSPublic, address: Address) -> Self {
         Self {
             weight: delegation,
             delegation,
             deposit,
             pubkey,
+            address,
         }
     }
 
-    fn new(delegation: StakeQuantity, deposit: Deposit, pubkey: Public) -> Self {
+    fn new(delegation: StakeQuantity, deposit: Deposit, pubkey: BLSPublic, address: Address) -> Self {
         Self {
             weight: delegation,
             delegation,
             deposit,
             pubkey,
+            address,
         }
     }
 
@@ -264,8 +267,12 @@ impl Validator {
         self.weight = self.delegation;
     }
 
-    pub fn pubkey(&self) -> &Public {
+    pub fn pubkey(&self) -> &BLSPublic {
         &self.pubkey
+    }
+
+    pub fn address(&self) -> &Address {
+        &self.address
     }
 
     pub fn delegation(&self) -> StakeQuantity {
@@ -308,7 +315,7 @@ impl NextValidators {
 
         let banned = Banned::load_from_state(&state)?;
         for validator in &validators {
-            let address = public_to_address(&validator.pubkey);
+            let address = validator.address();
             assert!(!banned.is_banned(&address), "{} is banned address", address);
         }
 
@@ -347,11 +354,11 @@ impl NextValidators {
         let min_delegation = self.min_delegation();
         for Validator {
             weight,
-            pubkey,
+            address,
             ..
         } in self.0.iter_mut().rev()
         {
-            if public_to_address(pubkey) == *block_author {
+            if *address == *block_author {
                 // block author
                 *weight = weight.saturating_sub(min_delegation);
                 break
@@ -368,13 +375,13 @@ impl NextValidators {
     pub fn remove(&mut self, target: &Address) {
         self.0.retain(
             |Validator {
-                 pubkey,
+                 address,
                  ..
-             }| public_to_address(pubkey) != *target,
+             }| *address != *target,
         );
     }
 
-    pub fn delegation(&self, pubkey: &Public) -> Option<StakeQuantity> {
+    pub fn delegation(&self, pubkey: &BLSPublic) -> Option<StakeQuantity> {
         self.0.iter().find(|validator| validator.pubkey == *pubkey).map(|&validator| validator.delegation)
     }
 
@@ -431,7 +438,7 @@ impl CurrentValidators {
     }
 
     pub fn addresses(&self) -> Vec<Address> {
-        self.0.iter().rev().map(|v| public_to_address(&v.pubkey)).collect()
+        self.0.iter().rev().map(|v| *v.address()).collect()
     }
 }
 
@@ -544,7 +551,8 @@ impl IntermediateRewards {
 pub struct Candidates(Vec<Candidate>);
 #[derive(Clone, Debug, Eq, PartialEq, RlpEncodable, RlpDecodable)]
 pub struct Candidate {
-    pub pubkey: Public,
+    pub pubkey: BLSPublic,
+    pub address: Address,
     pub deposit: Deposit,
     pub nomination_ends_at: u64,
     pub metadata: Bytes,
@@ -577,9 +585,9 @@ impl Candidates {
         let Candidates(candidates) = Self::load_from_state(state)?;
         let mut result = Vec::new();
         for candidate in candidates.into_iter().filter(|c| c.deposit >= min_deposit) {
-            let address = public_to_address(&candidate.pubkey);
+            let address = candidate.address;
             if let Some(delegation) = delegations.get(&address).cloned() {
-                result.push(Validator::new(delegation, candidate.deposit, candidate.pubkey));
+                result.push(Validator::new(delegation, candidate.deposit, candidate.pubkey, candidate.address));
             }
         }
         // Candidates are sorted in low priority: low index, high priority: high index
@@ -589,8 +597,8 @@ impl Candidates {
         Ok(result)
     }
 
-    pub fn get_candidate(&self, account: &Address) -> Option<&Candidate> {
-        self.0.iter().find(|c| public_to_address(&c.pubkey) == *account)
+    pub fn get_candidate(&self, address: &Address) -> Option<&Candidate> {
+        self.0.iter().find(|c| c.address == *address)
     }
 
     #[cfg(test)]
@@ -602,13 +610,21 @@ impl Candidates {
     }
 
     #[cfg(test)]
-    pub fn get_index(&self, account: &Address) -> Option<usize> {
-        self.0.iter().position(|c| public_to_address(&c.pubkey) == *account)
+    pub fn get_index(&self, address: &Address) -> Option<usize> {
+        self.0.iter().position(|c| c.address == *address)
     }
 
-    pub fn add_deposit(&mut self, pubkey: &Public, quantity: Deposit, nomination_ends_at: u64, metadata: Bytes) {
+    pub fn add_deposit(
+        &mut self,
+        pubkey: &BLSPublic,
+        address: &Address,
+        quantity: Deposit,
+        nomination_ends_at: u64,
+        metadata: Bytes,
+    ) {
         if let Some(index) = self.0.iter().position(|c| c.pubkey == *pubkey) {
             let candidate = &mut self.0[index];
+            assert_eq!(candidate.address, *address);
             candidate.deposit += quantity;
             if candidate.nomination_ends_at < nomination_ends_at {
                 candidate.nomination_ends_at = nomination_ends_at;
@@ -617,34 +633,34 @@ impl Candidates {
         } else {
             self.0.push(Candidate {
                 pubkey: *pubkey,
+                address: *address,
                 deposit: quantity,
                 nomination_ends_at,
                 metadata,
             });
         };
-        self.reprioritize(&[public_to_address(pubkey)]);
+        self.reprioritize(&[*address]);
     }
 
     pub fn renew_candidates(
         &mut self,
         validators: &NextValidators,
         nomination_ends_at: u64,
-        inactive_validators: &[Address],
+        inactive_validators_address: &[Address],
         banned: &Banned,
     ) {
-        let to_renew: HashSet<_> = (validators.iter())
-            .map(|validator| validator.pubkey)
-            .filter(|pubkey| !inactive_validators.contains(&public_to_address(pubkey)))
+        let to_renew: HashSet<Address> = (validators.iter())
+            .map(|validator| *validator.address())
+            .filter(|address| !inactive_validators_address.contains(address))
             .collect();
 
-        for candidate in self.0.iter_mut().filter(|c| to_renew.contains(&c.pubkey)) {
-            let address = public_to_address(&candidate.pubkey);
-            assert!(!banned.is_banned(&address), "{} is banned address", address);
+        for candidate in self.0.iter_mut().filter(|c| to_renew.contains(&c.address)) {
+            assert!(!banned.is_banned(&candidate.address), "{} is banned address", candidate.address);
             candidate.nomination_ends_at = nomination_ends_at;
         }
 
         let to_reprioritize: Vec<_> =
-            self.0.iter().filter(|c| to_renew.contains(&c.pubkey)).map(|c| public_to_address(&c.pubkey)).collect();
+            self.0.iter().filter(|c| to_renew.contains(&c.address)).map(|c| c.address).collect();
 
         self.reprioritize(&to_reprioritize);
     }
@@ -656,7 +672,7 @@ impl Candidates {
     }
 
     pub fn remove(&mut self, address: &Address) -> Option<Candidate> {
-        if let Some(index) = self.0.iter().position(|c| public_to_address(&c.pubkey) == *address) {
+        if let Some(index) = self.0.iter().position(|c| c.address == *address) {
             Some(self.0.remove(index))
         } else {
             None
@@ -666,9 +682,8 @@ impl Candidates {
     fn reprioritize(&mut self, targets: &[Address]) {
         let mut renewed = Vec::new();
         for target in targets {
-            let position = (self.0.iter())
-                .position(|c| public_to_address(&c.pubkey) == *target)
-                .expect("Reprioritize target should be a candidate");
+            let position =
+                (self.0.iter()).position(|c| c.address == *target).expect("Reprioritize target should be a candidate");
             renewed.push(self.0.remove(position));
         }
         self.0.append(&mut renewed);
@@ -724,7 +739,7 @@ impl Jail {
 
     pub fn add(&mut self, candidate: Candidate, custody_until: u64, released_at: u64) {
         assert!(custody_until <= released_at);
-        let address = public_to_address(&candidate.pubkey);
+        let address = candidate.address;
         self.0.insert(address, Prisoner {
             address,
             deposit: candidate.deposit,

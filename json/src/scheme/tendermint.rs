@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::uint::Uint;
-use ckey::{PlatformAddress, Public};
+use ckey::{Address, BLSPublic, PlatformAddress};
 use std::collections::HashMap;
 
 /// Tendermint params deserialization.
@@ -23,7 +23,7 @@ use std::collections::HashMap;
 #[serde(rename_all = "camelCase")]
 pub struct TendermintParams {
     /// Valid validators.
-    pub validators: Vec<Public>,
+    pub validators: Vec<(Address, BLSPublic)>,
     /// Propose step timeout in milliseconds.
     pub timeout_propose: Option<Uint>,
     /// Propose step timeout delta in milliseconds.
