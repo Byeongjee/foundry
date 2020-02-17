@@ -15,7 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ckey::{
-    sign, sign_schnorr, Error as KeyError, KeyPair, Message, Private, Public, SchnorrSignature, Secret, Signature,
+    sign, sign_bls, BLSKeyPair, BLSPrivate, BLSPublic, BLSSignature, Error as KeyError, KeyPair, Message, Private,
+    Public, Secret, Signature,
 };
 
 /// An opaque wrapper for secret.
@@ -37,13 +38,25 @@ impl DecryptedAccount {
     }
 
     /// Sign a message with Schnorr scheme.
-    pub fn sign_schnorr(&self, message: &Message) -> Result<SchnorrSignature, KeyError> {
-        sign_schnorr(&Private::from(self.secret), message)
+    pub fn sign_bls(&self, message: &Message) -> BLSSignature {
+        sign_bls(&BLSPrivate::from(self.secret), message)
     }
 
     /// Derive public key.
     pub fn public(&self) -> Result<Public, KeyError> {
         Ok(*KeyPair::from_private(Private::from(self.secret))?.public())
+    }
+
+    /// Derive BLS public key for block signing.
+    pub fn bls_public(&self) -> BLSPublic {
+        *BLSKeyPair::from_secret(self.secret).public()
+    }
+
+    /// Signature of BLS public key signed by oneself.
+    /// This is for proof of posession.
+    pub fn bls_signature_of_pubic(&self) -> BLSSignature {
+        let public = self.bls_public();
+        self.sign_bls(&public.hash())
     }
 }
 

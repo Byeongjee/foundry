@@ -17,7 +17,7 @@
 use super::TaggedRlp;
 use crate::util::unexpected::Mismatch;
 use crate::ShardId;
-use ckey::Address;
+use ckey::{Address, BLSPublic, BLSSignature};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
@@ -53,6 +53,10 @@ pub enum Error {
         idx: usize,
         parent_height: u64,
     },
+    InvalidProofOfPosessionSignature {
+        public: BLSPublic,
+        signature: BLSSignature,
+    },
 }
 
 #[derive(Clone, Copy)]
@@ -72,6 +76,7 @@ enum ErrorID {
     SignatureOfInvalid = 12,
     InsufficientStakes = 13,
     InvalidValidatorIndex = 14,
+    InvalidProofOfPosessionSignature = 15,
 }
 
 impl Encodable for ErrorID {
@@ -98,6 +103,7 @@ impl Decodable for ErrorID {
             12 => Ok(ErrorID::SignatureOfInvalid),
             13 => Ok(ErrorID::InsufficientStakes),
             14 => Ok(ErrorID::InvalidValidatorIndex),
+            15 => Ok(ErrorID::InvalidProofOfPosessionSignature),
             _ => Err(DecoderError::Custom("Unexpected ActionTag Value")),
         }
     }
@@ -123,6 +129,7 @@ impl TaggedRlp for RlpHelper {
             ErrorID::SignatureOfInvalid => 2,
             ErrorID::InsufficientStakes => 3,
             ErrorID::InvalidValidatorIndex => 3,
+            ErrorID::InvalidProofOfPosessionSignature => 3,
         })
     }
 }
@@ -165,6 +172,12 @@ impl Encodable for Error {
                 idx,
                 parent_height,
             } => RlpHelper::new_tagged_list(s, ErrorID::InvalidValidatorIndex).append(idx).append(parent_height),
+            Error::InvalidProofOfPosessionSignature {
+                public,
+                signature,
+            } => RlpHelper::new_tagged_list(s, ErrorID::InvalidProofOfPosessionSignature)
+                .append(public)
+                .append(signature),
         };
     }
 }
@@ -199,6 +212,10 @@ impl Decodable for Error {
             ErrorID::InvalidValidatorIndex => Error::InvalidValidatorIndex {
                 idx: rlp.val_at(1)?,
                 parent_height: rlp.val_at(2)?,
+            },
+            ErrorID::InvalidProofOfPosessionSignature => Error::InvalidProofOfPosessionSignature {
+                public: rlp.val_at(1)?,
+                signature: rlp.val_at(2)?,
             },
         };
         RlpHelper::check_size(rlp, tag)?;
@@ -239,6 +256,10 @@ impl Display for Error {
                 idx,
                 parent_height,
             } => write!(f, "The validator index {} is invalid at the parent hash {}", idx, parent_height),
+            Error::InvalidProofOfPosessionSignature {
+                public,
+                signature,
+            } => write!(f, "The signature {} is not matching with the public key {}", signature, public),
         }
     }
 }

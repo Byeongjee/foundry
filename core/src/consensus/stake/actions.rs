@@ -17,7 +17,7 @@
 use crate::client::ConsensusClient;
 use crate::consensus::{ConsensusMessage, ValidatorSet};
 use ccrypto::Blake;
-use ckey::{recover, Address, Signature};
+use ckey::{recover, Address, BLSPublic, BLSSignature, Signature};
 use ctypes::errors::SyntaxError;
 use ctypes::CommonParams;
 use primitives::{Bytes, H256};
@@ -79,6 +79,8 @@ pub enum Action {
     },
     SelfNominate {
         deposit: u64,
+        public: BLSPublic,
+        signature: BLSSignature,
         metadata: Bytes,
     },
     ChangeParams {
@@ -190,9 +192,9 @@ impl Action {
                         ))
                     })?
                     .hash();
-                let signer = validators.get(&parent_hash, signer_idx1);
-                if message1.verify(&signer) != Ok(true) || message2.verify(&signer) != Ok(true) {
-                    return Err(SyntaxError::InvalidCustomAction(String::from("Schnorr signature verification fails")))
+                let signer_public = validators.get_public(&parent_hash, signer_idx1);
+                if message1.verify(&signer_public) != Ok(true) || message2.verify(&signer_public) != Ok(true) {
+                    return Err(SyntaxError::InvalidCustomAction(String::from("BLS signature verification fails")))
                 }
             }
         }
@@ -234,9 +236,16 @@ impl Encodable for Action {
             }
             Action::SelfNominate {
                 deposit,
+                public,
+                signature,
                 metadata,
             } => {
-                s.begin_list(3).append(&ActionTag::SelfNominate).append(deposit).append(metadata);
+                s.begin_list(5)
+                    .append(&ActionTag::SelfNominate)
+                    .append(deposit)
+                    .append(public)
+                    .append(signature)
+                    .append(metadata);
             }
             Action::ChangeParams {
                 metadata_seq,
@@ -323,15 +332,17 @@ impl Decodable for Action {
             }
             ActionTag::SelfNominate => {
                 let item_count = rlp.item_count()?;
-                if item_count != 3 {
+                if item_count != 5 {
                     return Err(DecoderError::RlpInvalidLength {
-                        expected: 3,
+                        expected: 5,
                         got: item_count,
                     })
                 }
                 Ok(Action::SelfNominate {
                     deposit: rlp.val_at(1)?,
-                    metadata: rlp.val_at(2)?,
+                    public: rlp.val_at(2)?,
+                    signature: rlp.val_at(3)?,
+                    metadata: rlp.val_at(4)?,
                 })
             }
             ActionTag::ChangeParams => {

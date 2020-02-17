@@ -20,7 +20,7 @@ mod distribute;
 
 use crate::client::ConsensusClient;
 use ccrypto::Blake;
-use ckey::{public_to_address, recover, Address, Public, Signature};
+use ckey::{public_to_address, recover, verify_bls, Address, BLSPublic, BLSSignature, Public, Signature};
 use cstate::{ActionHandler, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::{RuntimeError, SyntaxError};
 use ctypes::util::unexpected::Mismatch;
@@ -91,7 +91,7 @@ impl ActionHandler for Stake {
         bytes: &[u8],
         state: &mut TopLevelState,
         fee_payer: &Address,
-        sender_public: &Public,
+        _sender_public: &Public,
     ) -> StateResult<()> {
         let action = Action::decode(&Rlp::new(bytes)).expect("Verification passed");
         match action {
@@ -114,6 +114,8 @@ impl ActionHandler for Stake {
             } => redelegate(state, fee_payer, &prev_delegatee, &next_delegatee, quantity),
             Action::SelfNominate {
                 deposit,
+                public,
+                signature,
                 metadata,
             } => {
                 let (current_term, nomination_ends_at) = {
@@ -127,7 +129,16 @@ impl ActionHandler for Stake {
                     let nomination_ends_at = current_term + expiration;
                     (current_term, nomination_ends_at)
                 };
-                self_nominate(state, fee_payer, sender_public, deposit, current_term, nomination_ends_at, metadata)
+                self_nominate(
+                    state,
+                    fee_payer,
+                    &public,
+                    &signature,
+                    deposit,
+                    current_term,
+                    nomination_ends_at,
+                    metadata,
+                )
             }
             Action::ChangeParams {
                 metadata_seq,
@@ -143,9 +154,9 @@ impl ActionHandler for Stake {
                 let client = self.client.read().as_ref().and_then(Weak::upgrade).expect("Client must be initialized");
                 let parent_hash =
                     client.block_header(&(message1.height() - 1).into()).expect("Parent header verified").hash();
-                let malicious_user_public = validator_set.get(&parent_hash, message1.signer_index());
+                let malicious_user_address = validator_set.get_address(&parent_hash, message1.signer_index());
 
-                ban(state, sender_public, public_to_address(&malicious_user_public))
+                ban(state, fee_payer, malicious_user_address)
             }
         }
     }
@@ -263,16 +274,13 @@ fn redelegate(
 fn self_nominate(
     state: &mut TopLevelState,
     fee_payer: &Address,
-    sender_public: &Public,
+    public: &BLSPublic,
+    pop_signature: &BLSSignature,
     deposit: u64,
     current_term: u64,
     nomination_ends_at: u64,
     metadata: Bytes,
 ) -> StateResult<()> {
-    if public_to_address(sender_public) != *fee_payer {
-        return Err(RuntimeError::FailedToHandleCustomAction("Cannot Self-nominate with regular key".to_string()).into())
-    }
-
     let blacklist = Banned::load_from_state(state)?;
     if blacklist.is_banned(&fee_payer) {
         return Err(RuntimeError::FailedToHandleCustomAction("Account is blacklisted".to_string()).into())
@@ -290,17 +298,29 @@ fn self_nominate(
         }
     };
 
+    match verify_bls(public, pop_signature, &public.hash()) {
+        Ok(true) => (),
+        Ok(false) | Err(_) => {
+            return Err(RuntimeError::InvalidProofOfPosessionSignature {
+                public: *public,
+                signature: *pop_signature,
+            }
+            .into())
+        }
+    };
+
     let mut candidates = Candidates::load_from_state(&state)?;
     state.sub_balance(fee_payer, deposit)?;
-    candidates.add_deposit(sender_public, total_deposit, nomination_ends_at, metadata);
+    candidates.add_deposit(public, fee_payer, total_deposit, nomination_ends_at, metadata);
 
     jail.save_to_state(state)?;
     candidates.save_to_state(state)?;
 
     ctrace!(
         ENGINE,
-        "Self-nominated. nominee: {}, deposit: {}, current_term: {}, ends_at: {}",
+        "Self-nominated. nominee: {}, public_key: {}, deposit: {}, current_term: {}, ends_at: {}",
         fee_payer,
+        public,
         deposit,
         current_term,
         nomination_ends_at
@@ -445,12 +465,11 @@ fn update_candidates(
 
     let expired = candidates.drain_expired_candidates(current_term);
     for candidate in &expired {
-        let address = public_to_address(&candidate.pubkey);
-        state.add_balance(&address, candidate.deposit)?;
-        ctrace!(ENGINE, "on_term_close::expired. candidate: {}, deposit: {}", address, candidate.deposit);
+        state.add_balance(&candidate.address, candidate.deposit)?;
+        ctrace!(ENGINE, "on_term_close::expired. candidate: {}, deposit: {}", candidate.address, candidate.deposit);
     }
     candidates.save_to_state(state)?;
-    Ok(expired.into_iter().map(|c| public_to_address(&c.pubkey)).collect())
+    Ok(expired.into_iter().map(|c| c.address).collect())
 }
 
 fn release_jailed_prisoners(state: &mut TopLevelState, current_term: u64) -> StateResult<Vec<Address>> {
@@ -482,7 +501,7 @@ pub fn jail(state: &mut TopLevelState, addresses: &[Address], custody_until: u64
     Ok(())
 }
 
-pub fn ban(state: &mut TopLevelState, informant: &Public, criminal: Address) -> StateResult<()> {
+pub fn ban(state: &mut TopLevelState, informant: &Address, criminal: Address) -> StateResult<()> {
     let mut banned = Banned::load_from_state(state)?;
     if banned.is_banned(&criminal) {
         return Err(RuntimeError::FailedToHandleCustomAction("Account is already banned".to_string()).into())
@@ -499,7 +518,7 @@ pub fn ban(state: &mut TopLevelState, informant: &Public, criminal: Address) -> 
         _ => 0,
     };
     // confiscate criminal's deposit and give the same deposit amount to the informant.
-    state.add_balance(&public_to_address(informant), deposit)?;
+    state.add_balance(&informant, deposit)?;
 
     jailed.remove(&criminal);
     banned.add(criminal);
@@ -647,8 +666,8 @@ mod tests {
 
     #[test]
     fn delegate() {
-        let delegatee_pubkey = Public::random();
-        let delegator_pubkey = Public::random();
+        let delegatee_pubkey = BLSPublic::random();
+        let delegator_pubkey = BLSPublic::random();
         let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
 

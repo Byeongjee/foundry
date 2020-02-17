@@ -22,11 +22,12 @@ use ccore::{
     UnverifiedTransaction,
 };
 use ckey::PlatformAddress;
-use ckey::{Address, Public, Signature};
+use ckey::{Address, BLSPublic, BLSSignature, Public, Signature};
 use ckeystore::DecryptedAccount;
 use clap::ArgMatches;
 use codechain_types::transaction::{Action, Transaction};
 use primitives::{Bytes, H256};
+use std::ops::Deref;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -65,6 +66,22 @@ impl SelfSigner {
 
     pub fn address(&self) -> Option<&Address> {
         self.signer.as_ref().map(|(address, _)| address)
+    }
+
+    pub fn bls_public(&self) -> Result<BLSPublic, AccountProviderError> {
+        let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
+        match &self.decrypted_account {
+            Some(account) => Ok(account.bls_public()),
+            None => Ok(self.account_provider.get_unlocked_account(&address)?.deref().bls_public()),
+        }
+    }
+
+    pub fn signature_of_bls_public(&self) -> Result<BLSSignature, AccountProviderError> {
+        let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
+        match &self.decrypted_account {
+            Some(account) => Ok(account.bls_signature_of_pubic()),
+            None => Ok(self.account_provider.get_unlocked_account(&address)?.deref().bls_signature_of_pubic()),
+        }
     }
 }
 
@@ -167,8 +184,24 @@ impl AutoSelfNomination {
                 return
             }
         };
+        let public = match signer.bls_public() {
+            Ok(public) => public,
+            Err(_) => {
+                cerror!(ENGINE, "");
+                return
+            }
+        };
+        let signature = match signer.signature_of_bls_public() {
+            Ok(signature) => signature,
+            Err(_) => {
+                cerror!(ENGINE, "");
+                return
+            }
+        };
         let selfnominate = SelfNominate {
             deposit,
+            public,
+            signature,
             metadata,
         };
         let tx = Transaction {
