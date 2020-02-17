@@ -40,7 +40,7 @@ use crate::error::Error;
 use crate::transaction::UnverifiedTransaction;
 use crate::views::HeaderView;
 use crate::Client;
-use ckey::{Address, SchnorrSignature};
+use ckey::{Address, BLSSignature};
 use cnetwork::NetworkService;
 use cstate::ActionHandler;
 use ctypes::errors::SyntaxError;
@@ -56,7 +56,7 @@ pub enum Seal {
     Tendermint {
         prev_view: View,
         cur_view: View,
-        precommits: Vec<SchnorrSignature>,
+        precommit_signature: BLSSignature,
         precommit_bitset: BitSet,
     },
     None,
@@ -70,12 +70,12 @@ impl Seal {
             Seal::Tendermint {
                 prev_view,
                 cur_view,
-                precommits,
+                precommit_signature,
                 precommit_bitset,
             } => Some(vec![
                 ::rlp::encode(prev_view),
                 ::rlp::encode(cur_view),
-                ::rlp::encode_list(precommits),
+                ::rlp::encode(precommit_signature),
                 ::rlp::encode(precommit_bitset),
             ]),
         }
@@ -255,8 +255,10 @@ pub trait ConsensusEngine: Sync + Send {
 /// Voting errors.
 #[derive(Debug)]
 pub enum EngineError {
-    /// Precommit signatures or author field does not belong to an authority.
-    BlockNotAuthorized(Address),
+    /// Author field does not belong to an authority.
+    BlockAuthorNotAuthorized(Address),
+    // Precommit signatures does not belong to an authority
+    PrecommitSignatureNotAuthorized,
     /// The signature cannot be verified with the signer of the message.
     MessageWithInvalidSignature {
         height: u64,
@@ -293,7 +295,8 @@ impl fmt::Display for EngineError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use self::EngineError::*;
         let msg = match self {
-            BlockNotAuthorized(address) => format!("Signer {} is not authorized.", address),
+            BlockAuthorNotAuthorized(address) => format!("Signer {} is not authorized.", address),
+            PrecommitSignatureNotAuthorized => format!("Precommit signature is not authorized."),
             MessageWithInvalidSignature {
                 height,
                 signer_index,
