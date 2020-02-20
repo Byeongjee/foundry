@@ -296,7 +296,7 @@ impl fmt::Display for EngineError {
         use self::EngineError::*;
         let msg = match self {
             BlockAuthorNotAuthorized(address) => format!("Signer {} is not authorized.", address),
-            PrecommitSignatureNotAuthorized => format!("Precommit signature is not authorized."),
+            PrecommitSignatureNotAuthorized => "Precommit signature is not authorized.".to_string(),
             MessageWithInvalidSignature {
                 height,
                 signer_index,

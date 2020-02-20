@@ -59,11 +59,12 @@ fn bls_aggregate_signatures(b: &mut Bencher) {
 fn bls_aggregate_and_verify(b: &mut Bencher) {
     let num_validators = 30;
     b.iter(|| {
-        let key_pairs = (0..num_validators).map(|_| Random.generate_bls().unwrap());
+        let key_pairs: Vec<_> = (0..num_validators).map(|_| Random.generate_bls().unwrap()).collect();
         let message = Message::random();
-        let signatures: Vec<BLSSignature> = key_pairs.map(|key_pair| sign_bls(key_pair.private(), &message)).collect();
+        let signatures: Vec<BLSSignature> =
+            key_pairs.iter().map(|key_pair| sign_bls(key_pair.private(), &message)).collect();
         let aggregated_signature = aggregate_signatures_bls(&signatures);
-        let publics: Vec<BLSPublic> = key_pairs.map(|key_pair| *key_pair.public()).collect();
+        let publics: Vec<BLSPublic> = key_pairs.iter().map(|key_pair| *key_pair.public()).collect();
         assert_eq!(Ok(true), verify_aggregated_bls(&publics, &aggregated_signature, &message))
     })
 }
