@@ -22,7 +22,7 @@ extern crate primitives;
 extern crate test;
 
 use ccrypto::Blake;
-use ckey::{recover, recover_schnorr, sign, sign_schnorr, verify, verify_schnorr, Generator, Message, Random};
+use ckey::{recover, sign, verify, Generator, Message, Random};
 use primitives::H160;
 use test::Bencher;
 

@@ -290,7 +290,7 @@ mod tests {
         let bad_voter = insert_and_unlock(&tap, "101");
         let bad_signature = tap.get_account(&bad_voter, None).unwrap().sign_bls(&vote_info.hash());
 
-        let aggregated_signuatre = aggregate_signatures_bls(&[signature0, signature2, bad_signature]);
+        let aggregated_signature = aggregate_signatures_bls(&[signature0, signature2, bad_signature]);
 
         let seal = Seal::Tendermint {
             prev_view: 0,

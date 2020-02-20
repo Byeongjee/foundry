@@ -386,6 +386,7 @@ mod tests {
     use super::*;
     use crate::client::TestBlockChainClient;
     use crate::consensus::{ConsensusMessage, DynamicValidator, Step, VoteOn, VoteStep};
+    use ckey::sign_bls;
     use ctypes::BlockHash;
     use rlp::rlp_encode_and_decode_test;
 
@@ -646,7 +647,7 @@ mod tests {
             &vote_step_twister,
             &|v| v,
         );
-        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Schnorr signature verification fails")));
+        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("BLS signature verification fails")));
         assert_eq!(result, expected_err);
     }
 
@@ -679,7 +680,7 @@ mod tests {
             &|v| v,
             &block_hash_twister,
         );
-        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Schnorr signature verification fails")));
+        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("BLS signature verification fails")));
         assert_eq!(result, expected_err);
     }
 }

@@ -569,6 +569,7 @@ mod tests {
     use super::*;
 
     use crate::consensus::stake::action_data::{get_delegation_key, Candidate, Prisoner};
+    use ckey::{sign_bls, BLSKeyPair, Secret};
     use cstate::tests::helpers;
     use cstate::TopStateView;
     use rlp::Encodable;
@@ -666,8 +667,12 @@ mod tests {
 
     #[test]
     fn delegate() {
-        let delegatee_pubkey = BLSPublic::random();
-        let delegator_pubkey = BLSPublic::random();
+        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
+        let delegatee_bls_private = delegatee_bls_keypair.private();
+        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
+        let delegatee_pubkey = Public::random();
+        let delegator_pubkey = Public::random();
         let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
 
@@ -679,7 +684,17 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &delegatee,
+            &delegatee_bls_pubkey,
+            &delegatee_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: delegatee,
@@ -709,9 +724,13 @@ mod tests {
 
     #[test]
     fn delegate_all() {
+        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
+        let delegatee_bls_private = delegatee_bls_keypair.private();
+        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
-        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator_pubkey = Public::random();
+        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
@@ -722,7 +741,17 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &delegatee,
+            &delegatee_bls_pubkey,
+            &delegatee_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: delegatee,
@@ -777,9 +806,13 @@ mod tests {
 
     #[test]
     fn delegate_too_much() {
+        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
+        let delegatee_bls_private = delegatee_bls_keypair.private();
+        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
-        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator_pubkey = Public::random();
+        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
@@ -790,7 +823,17 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &delegatee,
+            &delegatee_bls_pubkey,
+            &delegatee_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: delegatee,
@@ -802,9 +845,13 @@ mod tests {
 
     #[test]
     fn can_transfer_within_non_delegated_tokens() {
+        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
+        let delegatee_bls_private = delegatee_bls_keypair.private();
+        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
-        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator_pubkey = Public::random();
+        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
@@ -815,7 +862,17 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &delegatee,
+            &delegatee_bls_pubkey,
+            &delegatee_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: delegatee,
@@ -833,9 +890,13 @@ mod tests {
 
     #[test]
     fn cannot_transfer_over_non_delegated_tokens() {
+        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
+        let delegatee_bls_private = delegatee_bls_keypair.private();
+        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
-        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator_pubkey = Public::random();
+        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
@@ -846,7 +907,17 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &delegatee,
+            &delegatee_bls_pubkey,
+            &delegatee_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: delegatee,
@@ -864,9 +935,13 @@ mod tests {
 
     #[test]
     fn can_revoke_delegated_tokens() {
+        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
+        let delegatee_bls_private = delegatee_bls_keypair.private();
+        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
-        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator_pubkey = Public::random();
+        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
@@ -877,7 +952,17 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &delegatee,
+            &delegatee_bls_pubkey,
+            &delegatee_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: delegatee,
@@ -902,9 +987,13 @@ mod tests {
 
     #[test]
     fn cannot_revoke_more_than_delegated_tokens() {
+        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
+        let delegatee_bls_private = delegatee_bls_keypair.private();
+        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
-        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator_pubkey = Public::random();
+        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
@@ -915,7 +1004,17 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &delegatee,
+            &delegatee_bls_pubkey,
+            &delegatee_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: delegatee,
@@ -940,9 +1039,13 @@ mod tests {
 
     #[test]
     fn revoke_all_should_clear_state() {
+        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
+        let delegatee_bls_private = delegatee_bls_keypair.private();
+        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
-        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator_pubkey = Public::random();
+        let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
@@ -953,7 +1056,17 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &delegatee,
+            &delegatee_bls_pubkey,
+            &delegatee_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: delegatee,
@@ -976,10 +1089,20 @@ mod tests {
 
     #[test]
     fn can_redelegate_tokens() {
+        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_pubkey = *prev_bls_keypair.public();
+        let prev_bls_private = prev_bls_keypair.private();
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+
+        let next_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let next_bls_pubkey = *next_bls_keypair.public();
+        let next_bls_private = next_bls_keypair.private();
+        let next_bls_pubkey_signature = sign_bls(next_bls_private, &next_bls_pubkey.hash());
         let next_delegatee_pubkey = Public::random();
         let next_delegatee = public_to_address(&next_delegatee_pubkey);
+
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
@@ -990,8 +1113,28 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
-        self_nominate(&mut state, &next_delegatee, &next_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &prev_delegatee,
+            &prev_bls_pubkey,
+            &prev_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
+        self_nominate(
+            &mut state,
+            &next_delegatee,
+            &next_bls_pubkey,
+            &next_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: prev_delegatee,
@@ -1018,10 +1161,20 @@ mod tests {
 
     #[test]
     fn cannot_redelegate_more_than_delegated_tokens() {
+        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_pubkey = *prev_bls_keypair.public();
+        let prev_bls_private = prev_bls_keypair.private();
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+
+        let next_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let next_bls_pubkey = *next_bls_keypair.public();
+        let next_bls_private = next_bls_keypair.private();
+        let next_bls_pubkey_signature = sign_bls(next_bls_private, &next_bls_pubkey.hash());
         let next_delegatee_pubkey = Public::random();
         let next_delegatee = public_to_address(&next_delegatee_pubkey);
+
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
@@ -1032,8 +1185,28 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
-        self_nominate(&mut state, &next_delegatee, &next_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &prev_delegatee,
+            &prev_bls_pubkey,
+            &prev_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
+        self_nominate(
+            &mut state,
+            &next_delegatee,
+            &next_bls_pubkey,
+            &next_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: prev_delegatee,
@@ -1060,10 +1233,20 @@ mod tests {
 
     #[test]
     fn redelegate_all_should_clear_state() {
+        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_pubkey = *prev_bls_keypair.public();
+        let prev_bls_private = prev_bls_keypair.private();
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+
+        let next_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let next_bls_pubkey = *next_bls_keypair.public();
+        let next_bls_private = next_bls_keypair.private();
+        let next_bls_pubkey_signature = sign_bls(next_bls_private, &next_bls_pubkey.hash());
         let next_delegatee_pubkey = Public::random();
         let next_delegatee = public_to_address(&next_delegatee_pubkey);
+
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
@@ -1074,8 +1257,28 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
-        self_nominate(&mut state, &next_delegatee, &next_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &prev_delegatee,
+            &prev_bls_pubkey,
+            &prev_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
+        self_nominate(
+            &mut state,
+            &next_delegatee,
+            &next_bls_pubkey,
+            &next_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: prev_delegatee,
@@ -1102,10 +1305,16 @@ mod tests {
 
     #[test]
     fn redelegate_only_to_candidate() {
+        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_pubkey = *prev_bls_keypair.public();
+        let prev_bls_private = prev_bls_keypair.private();
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+
         let next_delegatee_pubkey = Public::random();
         let next_delegatee = public_to_address(&next_delegatee_pubkey);
+
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
@@ -1117,7 +1326,17 @@ mod tests {
         };
         stake.init(&mut state).unwrap();
 
-        self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &prev_delegatee,
+            &prev_bls_pubkey,
+            &prev_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: prev_delegatee,
@@ -1137,11 +1356,22 @@ mod tests {
 
     #[test]
     fn cannot_redelegate_to_banned_account() {
-        let informant_pubkey = Public::random();
+        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_pubkey = *prev_bls_keypair.public();
+        let prev_bls_private = prev_bls_keypair.private();
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
+
+        let criminal_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let criminal_bls_pubkey = *criminal_bls_keypair.public();
+        let criminal_bls_private = criminal_bls_keypair.private();
+        let criminal_bls_pubkey_signature = sign_bls(criminal_bls_private, &criminal_bls_pubkey.hash());
         let criminal_pubkey = Public::random();
+
+        let informant_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let criminal = public_to_address(&criminal_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
+        let informant = public_to_address(&informant_pubkey);
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
 
@@ -1154,8 +1384,28 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
-        self_nominate(&mut state, &criminal, &criminal_pubkey, 100, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &prev_delegatee,
+            &prev_bls_pubkey,
+            &prev_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
+        self_nominate(
+            &mut state,
+            &criminal,
+            &criminal_bls_pubkey,
+            &criminal_bls_pubkey_signature,
+            100,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: criminal,
@@ -1171,7 +1421,7 @@ mod tests {
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 2);
 
-        assert_eq!(Ok(()), ban(&mut state, &informant_pubkey, criminal));
+        assert_eq!(Ok(()), ban(&mut state, &informant, criminal));
 
         let banned = Banned::load_from_state(&state).unwrap();
         assert!(banned.is_banned(&criminal));
@@ -1190,10 +1440,20 @@ mod tests {
 
     #[test]
     fn cannot_redelegate_to_jailed_account() {
+        let jail_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let jail_bls_pubkey = *jail_bls_keypair.public();
+        let jail_bls_private = jail_bls_keypair.private();
+        let jail_bls_pubkey_signature = sign_bls(jail_bls_private, &jail_bls_pubkey.hash());
         let jail_pubkey = Public::random();
         let jail_address = public_to_address(&jail_pubkey);
+
+        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_pubkey = *prev_bls_keypair.public();
+        let prev_bls_private = prev_bls_keypair.private();
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
@@ -1206,10 +1466,30 @@ mod tests {
             Stake::new(genesis_stakes)
         };
         stake.init(&mut state).unwrap();
-        self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &prev_delegatee,
+            &prev_bls_pubkey,
+            &prev_bls_pubkey_signature,
+            0,
+            0,
+            10,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let deposit = 200;
-        self_nominate(&mut state, &jail_address, &jail_pubkey, deposit, 0, 5, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &jail_address,
+            &jail_bls_pubkey,
+            &jail_bls_pubkey_signature,
+            deposit,
+            0,
+            5,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address: prev_delegatee,
@@ -1239,6 +1519,11 @@ mod tests {
 
     #[test]
     fn self_nominate_deposit_test() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
+
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
 
@@ -1249,7 +1534,8 @@ mod tests {
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
-        let result = self_nominate(&mut state, &address, &address_pubkey, 0, 0, 5, b"metadata1".to_vec());
+        let result =
+            self_nominate(&mut state, &address, &bls_pubkey, &bls_pubkey_signature, 0, 0, 5, b"metadata1".to_vec());
         assert_eq!(result, Ok(()));
 
         assert_eq!(state.balance(&address).unwrap(), 1000);
@@ -1257,7 +1543,8 @@ mod tests {
         assert_eq!(
             candidates.get_candidate(&address),
             Some(&Candidate {
-                pubkey: address_pubkey,
+                address,
+                pubkey: bls_pubkey,
                 deposit: 0,
                 nomination_ends_at: 5,
                 metadata: b"metadata1".to_vec(),
@@ -1265,7 +1552,8 @@ mod tests {
             "nomination_ends_at should be updated even if candidate deposits 0"
         );
 
-        let result = self_nominate(&mut state, &address, &address_pubkey, 200, 0, 10, b"metadata2".to_vec());
+        let result =
+            self_nominate(&mut state, &address, &bls_pubkey, &bls_pubkey_signature, 200, 0, 10, b"metadata2".to_vec());
         assert_eq!(result, Ok(()));
 
         assert_eq!(state.balance(&address).unwrap(), 800);
@@ -1273,14 +1561,16 @@ mod tests {
         assert_eq!(
             candidates.get_candidate(&address),
             Some(&Candidate {
-                pubkey: address_pubkey,
+                address,
+                pubkey: bls_pubkey,
                 deposit: 200,
                 nomination_ends_at: 10,
                 metadata: b"metadata2".to_vec(),
             })
         );
 
-        let result = self_nominate(&mut state, &address, &address_pubkey, 0, 0, 15, b"metadata3".to_vec());
+        let result =
+            self_nominate(&mut state, &address, &bls_pubkey, &bls_pubkey_signature, 0, 0, 15, b"metadata3".to_vec());
         assert_eq!(result, Ok(()));
 
         assert_eq!(state.balance(&address).unwrap(), 800);
@@ -1288,7 +1578,8 @@ mod tests {
         assert_eq!(
             candidates.get_candidate(&address),
             Some(&Candidate {
-                pubkey: address_pubkey,
+                address,
+                pubkey: bls_pubkey,
                 deposit: 200,
                 nomination_ends_at: 15,
                 metadata: b"metadata3".to_vec(),
@@ -1299,6 +1590,10 @@ mod tests {
 
     #[test]
     fn self_nominate_fail_with_insufficient_balance() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
 
@@ -1309,7 +1604,7 @@ mod tests {
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
-        let result = self_nominate(&mut state, &address, &address_pubkey, 2000, 0, 5, b"".to_vec());
+        let result = self_nominate(&mut state, &address, &bls_pubkey, &bls_pubkey_signature, 2000, 0, 5, b"".to_vec());
         assert!(result.is_err(), "Cannot self-nominate without a sufficient balance");
     }
 
@@ -1323,6 +1618,10 @@ mod tests {
 
     #[test]
     fn self_nominate_returns_deposits_after_expiration() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
 
@@ -1334,7 +1633,7 @@ mod tests {
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
-        self_nominate(&mut state, &address, &address_pubkey, 200, 0, 30, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &address, &bls_pubkey, &bls_pubkey_signature, 200, 0, 30, b"".to_vec()).unwrap();
 
         let result = on_term_close(&mut state, pseudo_term_to_block_num_calculator(29), &[]);
         assert_eq!(result, Ok(()));
@@ -1344,7 +1643,8 @@ mod tests {
         assert_eq!(
             candidates.get_candidate(&address),
             Some(&Candidate {
-                pubkey: address_pubkey,
+                address,
+                pubkey: bls_pubkey,
                 deposit: 200,
                 nomination_ends_at: 30,
                 metadata: b"".to_vec(),
@@ -1362,6 +1662,10 @@ mod tests {
 
     #[test]
     fn self_nominate_reverts_delegations_after_expiration() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
         let delegator_pubkey = Public::random();
@@ -1379,7 +1683,7 @@ mod tests {
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
-        self_nominate(&mut state, &address, &address_pubkey, 0, 0, 30, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &address, &bls_pubkey, &bls_pubkey_signature, 0, 0, 30, b"".to_vec()).unwrap();
 
         let action = Action::DelegateCCS {
             address,
@@ -1406,6 +1710,10 @@ mod tests {
 
     #[test]
     fn jail_candidate() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
 
@@ -1417,7 +1725,7 @@ mod tests {
 
         // TODO: change with stake.execute()
         let deposit = 200;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, 5, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &address, &bls_pubkey, &bls_pubkey_signature, deposit, 0, 5, b"".to_vec()).unwrap();
 
         let custody_until = 10;
         let released_at = 20;
@@ -1444,6 +1752,10 @@ mod tests {
 
     #[test]
     fn cannot_self_nominate_while_custody() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
 
@@ -1458,14 +1770,25 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &address,
+            &bls_pubkey,
+            &bls_pubkey_signature,
+            deposit,
+            0,
+            nominate_expire,
+            b"".to_vec(),
+        )
+        .unwrap();
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 
         for current_term in 0..=custody_until {
             let result = self_nominate(
                 &mut state,
                 &address,
-                &address_pubkey,
+                &bls_pubkey,
+                &bls_pubkey_signature,
                 0,
                 current_term,
                 current_term + nominate_expire,
@@ -1483,6 +1806,10 @@ mod tests {
 
     #[test]
     fn can_self_nominate_after_custody() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
 
@@ -1497,8 +1824,17 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"metadata-before".to_vec())
-            .unwrap();
+        self_nominate(
+            &mut state,
+            &address,
+            &bls_pubkey,
+            &bls_pubkey_signature,
+            deposit,
+            0,
+            nominate_expire,
+            b"metadata-before".to_vec(),
+        )
+        .unwrap();
         jail(&mut state, &[address], custody_until, released_at).unwrap();
         for current_term in 0..=custody_until {
             on_term_close(&mut state, pseudo_term_to_block_num_calculator(current_term), &[]).unwrap();
@@ -1509,7 +1845,8 @@ mod tests {
         let result = self_nominate(
             &mut state,
             &address,
-            &address_pubkey,
+            &bls_pubkey,
+            &bls_pubkey_signature,
             additional_deposit,
             current_term,
             current_term + nominate_expire,
@@ -1521,9 +1858,10 @@ mod tests {
         assert_eq!(
             candidates.get_candidate(&address),
             Some(&Candidate {
+                address,
                 deposit: deposit + additional_deposit,
                 nomination_ends_at: current_term + nominate_expire,
-                pubkey: address_pubkey,
+                pubkey: bls_pubkey,
                 metadata: "metadata-after".into()
             }),
             "The prisoner is become a candidate",
@@ -1537,6 +1875,10 @@ mod tests {
 
     #[test]
     fn jail_released_after() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
 
@@ -1551,7 +1893,17 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &address,
+            &bls_pubkey,
+            &bls_pubkey_signature,
+            deposit,
+            0,
+            nominate_expire,
+            b"".to_vec(),
+        )
+        .unwrap();
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 
         for current_term in 0..released_at {
@@ -1577,9 +1929,13 @@ mod tests {
 
     #[test]
     fn cannot_delegate_until_released() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
-        let delegator_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = metadata_for_election();
@@ -1597,7 +1953,17 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &address,
+            &bls_pubkey,
+            &bls_pubkey_signature,
+            deposit,
+            0,
+            nominate_expire,
+            b"".to_vec(),
+        )
+        .unwrap();
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 
         for current_term in 0..=released_at {
@@ -1621,9 +1987,13 @@ mod tests {
 
     #[test]
     fn kick_reverts_delegations() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
-        let delegator_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = metadata_for_election();
@@ -1641,7 +2011,17 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        self_nominate(
+            &mut state,
+            &address,
+            &bls_pubkey,
+            &bls_pubkey_signature,
+            deposit,
+            0,
+            nominate_expire,
+            b"".to_vec(),
+        )
+        .unwrap();
 
         let action = Action::DelegateCCS {
             address,
@@ -1664,9 +2044,13 @@ mod tests {
 
     #[test]
     fn self_nomination_before_kick_preserves_delegations() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
-        let delegator_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = metadata_for_election();
@@ -1683,7 +2067,8 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, 0, 0, nominate_expire, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &address, &bls_pubkey, &bls_pubkey_signature, 0, 0, nominate_expire, b"".to_vec())
+            .unwrap();
 
         let action = Action::DelegateCCS {
             address,
@@ -1701,7 +2086,8 @@ mod tests {
         let result = self_nominate(
             &mut state,
             &address,
-            &address_pubkey,
+            &bls_pubkey,
+            &bls_pubkey_signature,
             0,
             current_term,
             current_term + nominate_expire,
@@ -1718,12 +2104,16 @@ mod tests {
 
     #[test]
     fn test_ban() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let informant_pubkey = Public::random();
         let criminal_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let criminal = public_to_address(&criminal_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
-
+        let informant = public_to_address(&informant_pubkey);
         let mut state = helpers::get_temp_state();
         state.add_balance(&criminal, 1000).unwrap();
 
@@ -1735,14 +2125,14 @@ mod tests {
         stake.init(&mut state).unwrap();
 
         let deposit = 100;
-        self_nominate(&mut state, &criminal, &criminal_pubkey, deposit, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &criminal, &bls_pubkey, &bls_pubkey_signature, deposit, 0, 10, b"".to_vec()).unwrap();
         let action = Action::DelegateCCS {
             address: criminal,
             quantity: 40,
         };
         stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
 
-        assert_eq!(Ok(()), ban(&mut state, &informant_pubkey, criminal));
+        assert_eq!(Ok(()), ban(&mut state, &informant, criminal));
 
         let banned = Banned::load_from_state(&state).unwrap();
         assert!(banned.is_banned(&criminal));
@@ -1761,7 +2151,12 @@ mod tests {
 
     #[test]
     fn ban_should_remove_prisoner_from_jail() {
+        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_pubkey = *bls_keypair.public();
+        let bls_private = bls_keypair.private();
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let informant_pubkey = Public::random();
+        let informant = public_to_address(&informant_pubkey);
         let criminal_pubkey = Public::random();
         let criminal = public_to_address(&criminal_pubkey);
 
@@ -1771,12 +2166,12 @@ mod tests {
         assert_eq!(Ok(()), state.add_balance(&criminal, 100));
 
         let deposit = 10;
-        self_nominate(&mut state, &criminal, &criminal_pubkey, deposit, 0, 10, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &criminal, &bls_pubkey, &bls_pubkey_signature, deposit, 0, 10, b"".to_vec()).unwrap();
         let custody_until = 10;
         let released_at = 20;
         jail(&mut state, &[criminal], custody_until, released_at).unwrap();
 
-        assert_eq!(Ok(()), ban(&mut state, &informant_pubkey, criminal));
+        assert_eq!(Ok(()), ban(&mut state, &informant, criminal));
 
         let jail = Jail::load_from_state(&state).unwrap();
         assert_eq!(jail.get_prisoner(&criminal), None, "Should be removed from the jail");

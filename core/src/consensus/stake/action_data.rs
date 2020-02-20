@@ -913,6 +913,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ckey::{public_to_address, Address, Public};
     use cstate::tests::helpers;
     use rand::{Rng, SeedableRng};
     use rand_xorshift::XorShiftRng;
@@ -1278,13 +1279,14 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
+        let bls_pubkey = BLSPublic::random();
         let pubkey = Public::random();
         let account = public_to_address(&pubkey);
         let deposits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
         for deposit in deposits.iter() {
             let mut candidates = Candidates::load_from_state(&state).unwrap();
-            candidates.add_deposit(&pubkey, *deposit, 0, b"".to_vec());
+            candidates.add_deposit(&bls_pubkey, &account, *deposit, 0, b"".to_vec());
             candidates.save_to_state(&mut state).unwrap();
         }
 
@@ -1300,11 +1302,12 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
+        let bls_pubkey = BLSPublic::random();
         let pubkey = Public::random();
         let account = public_to_address(&pubkey);
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 10, 0, b"metadata".to_vec());
+        candidates.add_deposit(&bls_pubkey, &account, 10, 0, b"metadata".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         // Assert
@@ -1319,15 +1322,16 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
+        let bls_pubkey = BLSPublic::random();
         let pubkey = Public::random();
         let account = public_to_address(&pubkey);
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 10, 0, b"metadata".to_vec());
+        candidates.add_deposit(&bls_pubkey, &account, 10, 0, b"metadata".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 10, 0, b"metadata-updated".to_vec());
+        candidates.add_deposit(&bls_pubkey, &account, 10, 0, b"metadata-updated".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         // Assert
@@ -1342,10 +1346,11 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
+        let bls_pubkey = BLSPublic::random();
         let pubkey = Public::random();
         let account = public_to_address(&pubkey);
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 0, 10, b"".to_vec());
+        candidates.add_deposit(&bls_pubkey, &account, 0, 10, b"".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         // Assert
@@ -1361,15 +1366,16 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
+        let bls_pubkey = BLSPublic::random();
         let pubkey = Public::random();
         let account = public_to_address(&pubkey);
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 10, 0, b"metadata".to_vec());
+        candidates.add_deposit(&bls_pubkey, &account, 10, 0, b"metadata".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 0, 0, b"metadata-updated".to_vec());
+        candidates.add_deposit(&bls_pubkey, &account, 0, 0, b"metadata-updated".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         // Assert
@@ -1384,13 +1390,14 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
+        let bls_pubkey = BLSPublic::random();
         let pubkey = Public::random();
         let account = public_to_address(&pubkey);
         let deposit_and_nomination_ends_at = [(10, 11), (20, 22), (30, 33), (0, 44)];
 
         for (deposit, nomination_ends_at) in &deposit_and_nomination_ends_at {
             let mut candidates = Candidates::load_from_state(&state).unwrap();
-            candidates.add_deposit(&pubkey, *deposit, *nomination_ends_at, b"".to_vec());
+            candidates.add_deposit(&bls_pubkey, &account, *deposit, *nomination_ends_at, b"".to_vec());
             candidates.save_to_state(&mut state).unwrap();
         }
 
@@ -1410,33 +1417,47 @@ mod tests {
     fn candidates_can_remove_expired_deposit() {
         let mut state = helpers::get_temp_state();
 
-        let pubkey0 = 0.into();
-        let pubkey1 = 1.into();
-        let pubkey2 = 2.into();
-        let pubkey3 = 3.into();
+        let bls_pubkey0 = BLSPublic::random();
+        let bls_pubkey1 = BLSPublic::random();
+        let bls_pubkey2 = BLSPublic::random();
+        let bls_pubkey3 = BLSPublic::random();
+
+        let pubkey0 = Public::random();
+        let pubkey1 = Public::random();
+        let pubkey2 = Public::random();
+        let pubkey3 = Public::random();
+
+        let address0 = public_to_address(&pubkey0);
+        let address1 = public_to_address(&pubkey1);
+        let address2 = public_to_address(&pubkey2);
+        let address3 = public_to_address(&pubkey3);
 
         // Prepare
         let candidates_prepared = [
             Candidate {
-                pubkey: pubkey0,
+                address: address0,
+                pubkey: bls_pubkey0,
                 deposit: 20,
                 nomination_ends_at: 11,
                 metadata: b"".to_vec(),
             },
             Candidate {
-                pubkey: pubkey1,
+                address: address1,
+                pubkey: bls_pubkey1,
                 deposit: 30,
                 nomination_ends_at: 22,
                 metadata: b"".to_vec(),
             },
             Candidate {
-                pubkey: pubkey2,
+                address: address2,
+                pubkey: bls_pubkey2,
                 deposit: 40,
                 nomination_ends_at: 33,
                 metadata: b"".to_vec(),
             },
             Candidate {
-                pubkey: pubkey3,
+                address: address3,
+                pubkey: bls_pubkey3,
                 deposit: 50,
                 nomination_ends_at: 44,
                 metadata: b"".to_vec(),
@@ -1444,6 +1465,7 @@ mod tests {
         ];
 
         for Candidate {
+            address,
             pubkey,
             deposit,
             nomination_ends_at,
@@ -1451,7 +1473,7 @@ mod tests {
         } in &candidates_prepared
         {
             let mut candidates = Candidates::load_from_state(&state).unwrap();
-            candidates.add_deposit(&pubkey, *deposit, *nomination_ends_at, metadata.clone());
+            candidates.add_deposit(&pubkey, &address, *deposit, *nomination_ends_at, metadata.clone());
             candidates.save_to_state(&mut state).unwrap();
         }
 
@@ -1467,47 +1489,55 @@ mod tests {
         assert_eq!(expired, prepared_expired);
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 2);
-        assert_eq!(
-            candidates.get_candidate(&public_to_address(&candidates_prepared[2].pubkey)),
-            Some(&candidates_prepared[2])
-        );
-        assert_eq!(
-            candidates.get_candidate(&public_to_address(&candidates_prepared[3].pubkey)),
-            Some(&candidates_prepared[3])
-        );
+        assert_eq!(candidates.get_candidate(&candidates_prepared[2].address), Some(&candidates_prepared[2]));
+        assert_eq!(candidates.get_candidate(&candidates_prepared[3].address), Some(&candidates_prepared[3]));
     }
 
     #[test]
     fn candidates_expire_all_cleanup_state() {
         let mut state = helpers::get_temp_state();
 
-        let pubkey0 = 0.into();
-        let pubkey1 = 1.into();
-        let pubkey2 = 2.into();
-        let pubkey3 = 3.into();
+        let bls_pubkey0 = BLSPublic::random();
+        let bls_pubkey1 = BLSPublic::random();
+        let bls_pubkey2 = BLSPublic::random();
+        let bls_pubkey3 = BLSPublic::random();
+
+        let pubkey0 = Public::random();
+        let pubkey1 = Public::random();
+        let pubkey2 = Public::random();
+        let pubkey3 = Public::random();
+
+        let address0 = public_to_address(&pubkey0);
+        let address1 = public_to_address(&pubkey1);
+        let address2 = public_to_address(&pubkey2);
+        let address3 = public_to_address(&pubkey3);
 
         // Prepare
         let candidates_prepared = [
             Candidate {
-                pubkey: pubkey0,
+                address: address0,
+                pubkey: bls_pubkey0,
                 deposit: 20,
                 nomination_ends_at: 11,
                 metadata: b"".to_vec(),
             },
             Candidate {
-                pubkey: pubkey1,
+                address: address1,
+                pubkey: bls_pubkey1,
                 deposit: 30,
                 nomination_ends_at: 22,
                 metadata: b"".to_vec(),
             },
             Candidate {
-                pubkey: pubkey2,
+                address: address2,
+                pubkey: bls_pubkey2,
                 deposit: 40,
                 nomination_ends_at: 33,
                 metadata: b"".to_vec(),
             },
             Candidate {
-                pubkey: pubkey3,
+                address: address3,
+                pubkey: bls_pubkey3,
                 deposit: 50,
                 nomination_ends_at: 44,
                 metadata: b"".to_vec(),
@@ -1515,6 +1545,7 @@ mod tests {
         ];
 
         for Candidate {
+            address,
             pubkey,
             deposit,
             nomination_ends_at,
@@ -1522,7 +1553,7 @@ mod tests {
         } in &candidates_prepared
         {
             let mut candidates = Candidates::load_from_state(&state).unwrap();
-            candidates.add_deposit(&pubkey, *deposit, *nomination_ends_at, metadata.clone());
+            candidates.add_deposit(&pubkey, &address, *deposit, *nomination_ends_at, metadata.clone());
             candidates.save_to_state(&mut state).unwrap();
         }
 
@@ -1546,12 +1577,14 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
-        let pubkey = 1.into();
+        let bls_pubkey = BLSPublic::random();
+        let pubkey = Public::random();
         let address = public_to_address(&pubkey);
         let mut jail = Jail::load_from_state(&state).unwrap();
         jail.add(
             Candidate {
-                pubkey,
+                address,
+                pubkey: bls_pubkey,
                 deposit: 100,
                 nomination_ends_at: 0,
                 metadata: b"".to_vec(),
@@ -1573,12 +1606,14 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
-        let pubkey = 1.into();
+        let bls_pubkey = BLSPublic::random();
+        let pubkey = Public::random();
         let address = public_to_address(&pubkey);
         let mut jail = Jail::load_from_state(&state).unwrap();
         jail.add(
             Candidate {
-                pubkey,
+                address,
+                pubkey: bls_pubkey,
                 deposit: 100,
                 nomination_ends_at: 0,
                 metadata: b"".to_vec(),
@@ -1600,12 +1635,14 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
-        let pubkey = 1.into();
+        let bls_pubkey = BLSPublic::random();
+        let pubkey = Public::random();
         let address = public_to_address(&pubkey);
         let mut jail = Jail::load_from_state(&state).unwrap();
         jail.add(
             Candidate {
-                pubkey,
+                address,
+                pubkey: bls_pubkey,
                 deposit: 100,
                 nomination_ends_at: 0,
                 metadata: b"".to_vec(),
@@ -1640,16 +1677,19 @@ mod tests {
     fn jail_keep_prisoners_until_kick_at() {
         let mut state = helpers::get_temp_state();
 
-        let pubkey1 = 1.into();
-        let pubkey2 = 2.into();
+        let bls_pubkey0 = BLSPublic::random();
+        let bls_pubkey1 = BLSPublic::random();
+        let pubkey0 = Public::random();
+        let pubkey1 = Public::random();
+        let address0 = public_to_address(&pubkey0);
         let address1 = public_to_address(&pubkey1);
-        let address2 = public_to_address(&pubkey2);
 
         // Prepare
         let mut jail = Jail::load_from_state(&state).unwrap();
         jail.add(
             Candidate {
-                pubkey: pubkey1,
+                address: address0,
+                pubkey: bls_pubkey0,
                 deposit: 100,
                 nomination_ends_at: 0,
                 metadata: b"".to_vec(),
@@ -1659,7 +1699,8 @@ mod tests {
         );
         jail.add(
             Candidate {
-                pubkey: pubkey2,
+                address: address1,
+                pubkey: bls_pubkey1,
                 deposit: 200,
                 nomination_ends_at: 0,
                 metadata: b"".to_vec(),
@@ -1677,24 +1718,27 @@ mod tests {
         // Assert
         assert_eq!(released, Vec::new());
         assert_eq!(jail.len(), 2);
+        assert_ne!(jail.get_prisoner(&address0), None);
         assert_ne!(jail.get_prisoner(&address1), None);
-        assert_ne!(jail.get_prisoner(&address2), None);
     }
 
     #[test]
     fn jail_partially_kick_prisoners() {
         let mut state = helpers::get_temp_state();
 
-        let pubkey1 = 1.into();
-        let pubkey2 = 2.into();
+        let bls_pubkey0 = BLSPublic::random();
+        let bls_pubkey1 = BLSPublic::random();
+        let pubkey0 = Public::random();
+        let pubkey1 = Public::random();
+        let address0 = public_to_address(&pubkey0);
         let address1 = public_to_address(&pubkey1);
-        let address2 = public_to_address(&pubkey2);
 
         // Prepare
         let mut jail = Jail::load_from_state(&state).unwrap();
         jail.add(
             Candidate {
-                pubkey: pubkey1,
+                address: address0,
+                pubkey: bls_pubkey0,
                 deposit: 100,
                 nomination_ends_at: 0,
                 metadata: b"".to_vec(),
@@ -1704,7 +1748,8 @@ mod tests {
         );
         jail.add(
             Candidate {
-                pubkey: pubkey2,
+                address: address1,
+                pubkey: bls_pubkey1,
                 deposit: 200,
                 nomination_ends_at: 0,
                 metadata: b"".to_vec(),
@@ -1721,20 +1766,22 @@ mod tests {
 
         // Assert
         assert_eq!(released, vec![Prisoner {
-            address: address1,
+            address: address0,
             deposit: 100,
             custody_until: 10,
             released_at: 20,
         }]);
         assert_eq!(jail.len(), 1);
-        assert_eq!(jail.get_prisoner(&address1), None);
-        assert_ne!(jail.get_prisoner(&address2), None);
+        assert_eq!(jail.get_prisoner(&address0), None);
+        assert_ne!(jail.get_prisoner(&address1), None);
     }
 
     #[test]
     fn jail_kick_all_prisoners() {
         let mut state = helpers::get_temp_state();
 
+        let bls_pubkey1 = BLSPublic::random();
+        let bls_pubkey2 = BLSPublic::random();
         let pubkey1 = 1.into();
         let pubkey2 = 2.into();
         let address1 = public_to_address(&pubkey1);
@@ -1744,7 +1791,8 @@ mod tests {
         let mut jail = Jail::load_from_state(&state).unwrap();
         jail.add(
             Candidate {
-                pubkey: pubkey1,
+                address: address1,
+                pubkey: bls_pubkey1,
                 deposit: 100,
                 nomination_ends_at: 0,
                 metadata: b"".to_vec(),
@@ -1754,7 +1802,8 @@ mod tests {
         );
         jail.add(
             Candidate {
-                pubkey: pubkey2,
+                address: address2,
+                pubkey: bls_pubkey2,
                 deposit: 200,
                 nomination_ends_at: 0,
                 metadata: b"".to_vec(),
@@ -1821,18 +1870,23 @@ mod tests {
     #[test]
     fn latest_deposit_higher_priority() {
         let mut state = helpers::get_temp_state();
+        let bls_pubkeys = (0..10).map(|_| BLSPublic::random()).collect::<Vec<_>>();
         let pubkeys = (0..10).map(|_| Public::random()).collect::<Vec<_>>();
+        let addresses = pubkeys.iter().map(|pubkey| public_to_address(pubkey)).collect::<Vec<_>>();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
         for _ in 0..10 {
             // Random pre-fill
             let i = rand::thread_rng().gen_range(0, pubkeys.len());
-            let pubkey = &pubkeys[i];
-            candidates.add_deposit(pubkey, 0, 0, Bytes::new());
+            let bls_pubkey = &bls_pubkeys[i];
+            let address = &addresses[i];
+            candidates.add_deposit(bls_pubkey, address, 0, 0, Bytes::new());
         }
         // Inserting pubkey in this order, they'll get sorted.
-        for pubkey in &pubkeys {
-            candidates.add_deposit(pubkey, 10, 0, Bytes::new());
+        for i in 0..10 {
+            let bls_pubkey = &bls_pubkeys[i];
+            let address = &addresses[i];
+            candidates.add_deposit(bls_pubkey, address, 0, 0, Bytes::new());
         }
         candidates.save_to_state(&mut state).unwrap();
 
@@ -1847,19 +1901,26 @@ mod tests {
     #[test]
     fn renew_doesnt_change_relative_priority() {
         let mut state = helpers::get_temp_state();
+
+        let bls_pubkeys = (0..10).map(|_| BLSPublic::random()).collect::<Vec<_>>();
         let pubkeys = (0..10).map(|_| Public::random()).collect::<Vec<_>>();
+        let addresses = pubkeys.iter().map(|pubkey| public_to_address(pubkey)).collect::<Vec<_>>();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        for pubkey in &pubkeys {
-            candidates.add_deposit(pubkey, 10, 0, Bytes::new());
+
+        for i in 0..10 {
+            let bls_pubkey = &bls_pubkeys[i];
+            let address = &addresses[i];
+            candidates.add_deposit(bls_pubkey, address, 10, 0, Bytes::new());
         }
+
         candidates.save_to_state(&mut state).unwrap();
 
         let dummy_validators = NextValidators(
-            pubkeys[0..5]
-                .iter()
-                .map(|pubkey| Validator {
-                    pubkey: *pubkey,
+            (0..5)
+                .map(|i| Validator {
+                    address: addresses[i],
+                    pubkey: bls_pubkeys[i],
                     deposit: 0,
                     delegation: 0,
                     weight: 0,
