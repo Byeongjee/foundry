@@ -75,12 +75,14 @@ impl SelfSigner {
             None => Ok(self.account_provider.get_unlocked_account(&address)?.deref().bls_public()),
         }
     }
-
-    pub fn signature_of_bls_public(&self) -> Result<BLSSignature, AccountProviderError> {
+    // concatenate BLS public key and address, and then sign on it
+    // this proof of posession is required to prevent rogue key attacks
+    // concatenation with address is required to prevent replay attacks
+    pub fn pop_signature(&self) -> Result<BLSSignature, AccountProviderError> {
         let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
         match &self.decrypted_account {
-            Some(account) => Ok(account.bls_signature_of_pubic()),
-            None => Ok(self.account_provider.get_unlocked_account(&address)?.deref().bls_signature_of_pubic()),
+            Some(account) => Ok(account.pop_signature(&address)),
+            None => Ok(self.account_provider.get_unlocked_account(&address)?.deref().pop_signature(&address)),
         }
     }
 }
@@ -177,13 +179,16 @@ impl AutoSelfNomination {
         metadata: Bytes,
     ) {
         let network_id = client.network_id();
-        let seq = match signer.address() {
-            Some(address) => client.latest_seq(address),
+        let address = match signer.address() {
+            Some(address) => address,
             None => {
                 cwarn!(ENGINE, "Signer was not assigned");
                 return
             }
         };
+
+        let seq = client.latest_seq(address);
+
         let public = match signer.bls_public() {
             Ok(public) => public,
             Err(_) => {
@@ -191,7 +196,7 @@ impl AutoSelfNomination {
                 return
             }
         };
-        let signature = match signer.signature_of_bls_public() {
+        let signature = match signer.pop_signature() {
             Ok(signature) => signature,
             Err(_) => {
                 cerror!(ENGINE, "");
