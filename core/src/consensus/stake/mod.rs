@@ -298,7 +298,7 @@ fn self_nominate(
         }
     };
 
-    match verify_bls(public, pop_signature, &public.hash()) {
+    match verify_bls(public, pop_signature, &public.hash_with_value(fee_payer)) {
         Ok(true) => (),
         Ok(false) | Err(_) => {
             return Err(RuntimeError::InvalidProofOfPosessionSignature {
@@ -670,11 +670,12 @@ mod tests {
         let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
-        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
+        let delegatee_bls_pubkey_signature =
+            sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash_with_value(&delegatee));
 
         let mut state = helpers::get_temp_state();
         let stake = {
@@ -727,12 +728,12 @@ mod tests {
         let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
-        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
-
+        let delegatee_bls_pubkey_signature =
+            sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash_with_value(&delegatee));
         let mut state = helpers::get_temp_state();
         let stake = {
             let mut genesis_stakes = HashMap::new();
@@ -809,11 +810,12 @@ mod tests {
         let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
-        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
+        let delegatee_bls_pubkey_signature =
+            sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash_with_value(delegatee));
 
         let mut state = helpers::get_temp_state();
         let stake = {
@@ -848,11 +850,12 @@ mod tests {
         let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
-        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
+        let delegatee_bls_pubkey_signature =
+            sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash_with_value(&delegatee));
 
         let mut state = helpers::get_temp_state();
         let stake = {
@@ -893,11 +896,12 @@ mod tests {
         let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
-        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
+        let delegatee_bls_pubkey_signature =
+            sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash_with_value(&delegatee));
 
         let mut state = helpers::get_temp_state();
         let stake = {
@@ -938,11 +942,12 @@ mod tests {
         let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
-        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
+        let delegatee_bls_pubkey_signature =
+            sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash_with_value(&delegatee));
 
         let mut state = helpers::get_temp_state();
         let stake = {
@@ -990,11 +995,12 @@ mod tests {
         let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
-        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
+        let delegatee_bls_pubkey_signature =
+            sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash_with_value(&delegatee));
 
         let mut state = helpers::get_temp_state();
         let stake = {
@@ -1042,11 +1048,12 @@ mod tests {
         let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
-        let delegatee_bls_pubkey_signature = sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash());
         let delegatee_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let delegatee = public_to_address(&delegatee_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
+        let delegatee_bls_pubkey_signature =
+            sign_bls(delegatee_bls_private, &delegatee_bls_pubkey.hash_with_value(&delegatee));
 
         let mut state = helpers::get_temp_state();
         let stake = {
@@ -1092,16 +1099,16 @@ mod tests {
         let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
-        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash_with_value(&prev_delegatee));
 
         let next_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let next_bls_pubkey = *next_bls_keypair.public();
         let next_bls_private = next_bls_keypair.private();
-        let next_bls_pubkey_signature = sign_bls(next_bls_private, &next_bls_pubkey.hash());
         let next_delegatee_pubkey = Public::random();
         let next_delegatee = public_to_address(&next_delegatee_pubkey);
+        let next_bls_pubkey_signature = sign_bls(next_bls_private, &next_bls_pubkey.hash_with_value(&next_delegatee));
 
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
@@ -1164,16 +1171,16 @@ mod tests {
         let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
-        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash_with_value(&prev_delegatee));
 
         let next_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let next_bls_pubkey = *next_bls_keypair.public();
         let next_bls_private = next_bls_keypair.private();
-        let next_bls_pubkey_signature = sign_bls(next_bls_private, &next_bls_pubkey.hash());
         let next_delegatee_pubkey = Public::random();
         let next_delegatee = public_to_address(&next_delegatee_pubkey);
+        let next_bls_pubkey_signature = sign_bls(next_bls_private, &next_bls_pubkey.hash_with_value(&next_delegatee));
 
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
@@ -1236,16 +1243,16 @@ mod tests {
         let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
-        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash_with_value(&prev_delegatee));
 
         let next_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let next_bls_pubkey = *next_bls_keypair.public();
         let next_bls_private = next_bls_keypair.private();
-        let next_bls_pubkey_signature = sign_bls(next_bls_private, &next_bls_pubkey.hash());
         let next_delegatee_pubkey = Public::random();
         let next_delegatee = public_to_address(&next_delegatee_pubkey);
+        let next_bls_pubkey_signature = sign_bls(next_bls_private, &next_bls_pubkey.hash_with_value(&next_delegatee));
 
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
@@ -1308,9 +1315,9 @@ mod tests {
         let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
-        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash_with_value(&prev_delegatee));
 
         let next_delegatee_pubkey = Public::random();
         let next_delegatee = public_to_address(&next_delegatee_pubkey);
@@ -1359,12 +1366,10 @@ mod tests {
         let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
-        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
 
         let criminal_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let criminal_bls_pubkey = *criminal_bls_keypair.public();
         let criminal_bls_private = criminal_bls_keypair.private();
-        let criminal_bls_pubkey_signature = sign_bls(criminal_bls_private, &criminal_bls_pubkey.hash());
         let criminal_pubkey = Public::random();
 
         let informant_pubkey = Public::random();
@@ -1374,6 +1379,9 @@ mod tests {
         let informant = public_to_address(&informant_pubkey);
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash_with_value(&prev_delegatee));
+        let criminal_bls_pubkey_signature =
+            sign_bls(criminal_bls_private, &criminal_bls_pubkey.hash_with_value(&criminal));
 
         let mut state = helpers::get_temp_state();
         state.add_balance(&criminal, 1000).unwrap();
@@ -1443,16 +1451,16 @@ mod tests {
         let jail_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let jail_bls_pubkey = *jail_bls_keypair.public();
         let jail_bls_private = jail_bls_keypair.private();
-        let jail_bls_pubkey_signature = sign_bls(jail_bls_private, &jail_bls_pubkey.hash());
         let jail_pubkey = Public::random();
         let jail_address = public_to_address(&jail_pubkey);
+        let jail_bls_pubkey_signature = sign_bls(jail_bls_private, &jail_bls_pubkey.hash_with_value(&jail_address));
 
         let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
-        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash());
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
+        let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash_with_value(&prev_delegatee));
 
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
@@ -1522,10 +1530,10 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
 
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
 
         let mut state = helpers::get_temp_state();
         state.add_balance(&address, 1000).unwrap();
@@ -1593,9 +1601,9 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
 
         let mut state = helpers::get_temp_state();
         state.add_balance(&address, 1000).unwrap();
@@ -1621,9 +1629,9 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
 
         let mut state = metadata_for_election();
         increase_term_id_until(&mut state, 29);
@@ -1665,9 +1673,9 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&address_pubkey);
 
@@ -1713,9 +1721,9 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
 
         let mut state = helpers::get_temp_state();
         state.add_balance(&address, 1000).unwrap();
@@ -1755,9 +1763,9 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
 
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
@@ -1809,9 +1817,9 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
 
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
@@ -1878,9 +1886,9 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
 
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
@@ -1932,9 +1940,9 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
@@ -1990,9 +1998,9 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
@@ -2047,9 +2055,9 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&address));
         let delegator_pubkey = Public::random();
         let delegator = public_to_address(&delegator_pubkey);
 
@@ -2107,11 +2115,11 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let informant_pubkey = Public::random();
         let criminal_pubkey = Public::random();
         let delegator_pubkey = Public::random();
         let criminal = public_to_address(&criminal_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&criminal));
         let delegator = public_to_address(&delegator_pubkey);
         let informant = public_to_address(&informant_pubkey);
         let mut state = helpers::get_temp_state();
@@ -2154,11 +2162,11 @@ mod tests {
         let bls_keypair = BLSKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
-        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash());
         let informant_pubkey = Public::random();
         let informant = public_to_address(&informant_pubkey);
         let criminal_pubkey = Public::random();
         let criminal = public_to_address(&criminal_pubkey);
+        let bls_pubkey_signature = sign_bls(bls_private, &bls_pubkey.hash_with_value(&criminal));
 
         let mut state = helpers::get_temp_state();
         let stake = Stake::new(HashMap::new());

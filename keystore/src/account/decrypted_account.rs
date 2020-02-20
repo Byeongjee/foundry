@@ -54,9 +54,9 @@ impl DecryptedAccount {
 
     /// Signature of BLS public key signed by oneself.
     /// This is for proof of posession.
-    pub fn bls_signature_of_pubic(&self) -> BLSSignature {
+    pub fn pop_signature<B: AsRef<[u8]>>(&self, to_concat: B) -> BLSSignature {
         let public = self.bls_public();
-        self.sign_bls(&public.hash())
+        self.sign_bls(&public.hash_with_value(to_concat))
     }
 }
 

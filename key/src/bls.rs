@@ -151,8 +151,10 @@ impl BLSPublic {
     }
 
     // Need to sign on BLSPublic for proof of posession
-    pub fn hash(&self) -> Message {
-        blake256(self.0.as_ref())
+    pub fn hash_with_value<B: AsRef<[u8]>>(&self, value: B) -> Message {
+        let mut data = self.0.to_vec();
+        data.extend(value.as_ref());
+        blake256(data)
     }
 
     fn g2(&self) -> Result<G2, Error> {
