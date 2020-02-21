@@ -26,11 +26,25 @@ use ckey::{
 use test::Bencher;
 
 #[bench]
+fn bls_keygen(b: &mut Bencher) {
+    b.iter(|| {
+        Random.generate_bls().unwrap()
+    })
+}
+
+#[bench]
+fn bls_messagegen(b: &mut Bencher) {
+    b.iter(|| {
+        Message::random()
+    })
+}
+
+#[bench]
 fn bls_sign(b: &mut Bencher) {
     b.iter(|| {
         let key_pair = Random.generate_bls().unwrap();
         let message = Message::random();
-        let _signature = sign_bls(key_pair.private(), &message);
+        sign_bls(key_pair.private(), &message)
     });
 }
 
@@ -45,19 +59,68 @@ fn bls_sign_and_verify(b: &mut Bencher) {
 }
 
 #[bench]
-fn bls_aggregate_signatures(b: &mut Bencher) {
-    let num_validators = 30;
+fn bls_get_signatures_30(b: &mut Bencher) {
+    bls_get_signatures(30, b)
+}
+
+#[bench]
+fn bls_aggregate_signatures_30(b: &mut Bencher) {
+    bls_aggregate_signatures(30, b)
+}
+
+#[bench]
+fn bls_aggregate_and_verify_30(b: &mut Bencher) {
+    bls_aggregate_and_verify(30, b)
+}
+
+#[bench]
+fn bls_get_signatures_60(b: &mut Bencher) {
+    bls_get_signatures(60, b)
+}
+
+#[bench]
+fn bls_aggregate_signatures_60(b: &mut Bencher) {
+    bls_aggregate_signatures(60, b)
+}
+
+#[bench]
+fn bls_aggregate_and_verify_60(b: &mut Bencher) {
+    bls_aggregate_and_verify(60, b)
+}
+
+#[bench]
+fn bls_get_signatures_90(b: &mut Bencher) {
+    bls_get_signatures(90, b)
+}
+
+#[bench]
+fn bls_aggregate_signatures_90(b: &mut Bencher) {
+    bls_aggregate_signatures(90, b)
+}
+
+#[bench]
+fn bls_aggregate_and_verify_90(b: &mut Bencher) {
+    bls_aggregate_and_verify(90, b)
+}
+
+fn bls_get_signatures(num_validators: usize, b: &mut Bencher) {
+    b.iter(|| {
+        let key_pairs = (0..num_validators).map(|_| Random.generate_bls().unwrap());
+        let message = Message::random();
+        key_pairs.map(|key_pair| sign_bls(key_pair.private(), &message)).collect::<Vec<BLSSignature>>()
+    })
+}
+
+fn bls_aggregate_signatures(num_validators: usize, b: &mut Bencher) {
     b.iter(|| {
         let key_pairs = (0..num_validators).map(|_| Random.generate_bls().unwrap());
         let message = Message::random();
         let signatures: Vec<BLSSignature> = key_pairs.map(|key_pair| sign_bls(key_pair.private(), &message)).collect();
-        let _aggregated_signature = aggregate_signatures_bls(&signatures);
+        aggregate_signatures_bls(&signatures)
     })
 }
 
-#[bench]
-fn bls_aggregate_and_verify(b: &mut Bencher) {
-    let num_validators = 30;
+fn bls_aggregate_and_verify(num_validators: usize, b: &mut Bencher) {
     b.iter(|| {
         let key_pairs: Vec<_> = (0..num_validators).map(|_| Random.generate_bls().unwrap()).collect();
         let message = Message::random();
