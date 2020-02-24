@@ -447,6 +447,7 @@ dependencies = [
  "parking_lot 0.6.4",
  "primitives 0.4.0 (git+https://github.com/Byeongjee/rust-codechain-primitives.git)",
  "rand 0.6.1",
+ "rand_core 0.5.1",
  "rand_xorshift 0.1.0",
  "rlp 0.4.0 (git+https://github.com/Byeongjee/rlp.git)",
  "rustc-hex 1.0.0",
