@@ -30,19 +30,19 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
-pub const BLS_SIGNATURE_SIZE: usize = 48;
-pub const BLS_PUBLIC_SIZE: usize = 96;
+pub const BLS_SIGNATURE_SIZE: usize = 96;
+pub const BLS_PUBLIC_SIZE: usize = 48;
 
 #[derive(Copy, Clone)]
-pub struct BLSSignature(G1);
+pub struct BLSSignature(G2);
 
 impl BLSSignature {
     pub fn random() -> Self {
         let mut rng = OsRng::default();
-        BLSSignature(G1::random(&mut rng))
+        BLSSignature(G2::random(&mut rng))
     }
 
-    fn compressed(&self) -> G1Compressed {
+    fn compressed(&self) -> G2Compressed {
         self.0.into_affine().into_compressed()
     }
 
@@ -50,12 +50,12 @@ impl BLSSignature {
         self.compressed().as_ref().to_hex()
     }
 
-    fn from_bits(data: &H384) -> Result<Self, Error> {
-        let g1 = match G1Compressed::from(data.0).into_affine() {
-            Ok(g1_affine) => g1_affine.into_projective(),
+    fn from_bits(data: &H768) -> Result<Self, Error> {
+        let g2 = match G2Compressed::from(data.0).into_affine() {
+            Ok(g2_affine) => g2_affine.into_projective(),
             _ => return Err(Error::InvalidSignature),
         };
-        Ok(BLSSignature(g1))
+        Ok(BLSSignature(g2))
     }
 }
 
@@ -87,11 +87,11 @@ impl FromStr for BLSSignature {
             Ok(ref hex) if hex.len() == BLS_SIGNATURE_SIZE => {
                 let mut data = [0; BLS_SIGNATURE_SIZE];
                 data.copy_from_slice(&hex[0..BLS_SIGNATURE_SIZE]);
-                let g1 = match G1Compressed::from(data).into_affine() {
-                    Ok(g1) => g1.into_projective(),
+                let g2 = match G2Compressed::from(data).into_affine() {
+                    Ok(g2) => g2.into_projective(),
                     _ => return Err(Error::InvalidSignature),
                 };
-                Ok(BLSSignature(g1))
+                Ok(BLSSignature(g2))
             }
             _ => Err(Error::InvalidSignature),
         }
@@ -109,19 +109,19 @@ impl Hash for BLSSignature {
 
 impl Default for BLSSignature {
     fn default() -> Self {
-        BLSSignature(G1::zero())
+        BLSSignature(G2::zero())
     }
 }
 impl Encodable for BLSSignature {
     fn rlp_append(&self, s: &mut RlpStream) {
-        let data: H384 = self.compressed().as_ref().into();
+        let data: H768 = self.compressed().as_ref().into();
         data.rlp_append(s);
     }
 }
 
 impl Decodable for BLSSignature {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
-        let data = H384::decode(rlp)?;
+        let data = H768::decode(rlp)?;
         match BLSSignature::from_bits(&data) {
             Ok(signature) => Ok(signature),
             _ => Err(DecoderError::Custom("Invalid Signature")),
@@ -129,9 +129,9 @@ impl Decodable for BLSSignature {
     }
 }
 
-impl From<G1> for BLSSignature {
-    fn from(g1: G1) -> Self {
-        BLSSignature(g1)
+impl From<G2> for BLSSignature {
+    fn from(g2: G2) -> Self {
+        BLSSignature(g2)
     }
 }
 
@@ -139,7 +139,7 @@ impl Serialize for BLSSignature {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer, {
-        let data: H384 = self.compressed().as_ref().into();
+        let data: H768 = self.compressed().as_ref().into();
         data.serialize(serializer)
     }
 }
@@ -148,7 +148,7 @@ impl<'a> Deserialize<'a> for BLSSignature {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'a>, {
-        let data = H384::deserialize(deserializer)?;
+        let data = H768::deserialize(deserializer)?;
         match Self::from_bits(&data) {
             Ok(signature) => Ok(signature),
             _ => Err(D::Error::custom("Invalid signature")),
@@ -158,12 +158,12 @@ impl<'a> Deserialize<'a> for BLSSignature {
 
 
 #[derive(Copy, Clone)]
-pub struct BLSPublic(G2);
+pub struct BLSPublic(G1);
 
 impl BLSPublic {
     pub fn random() -> Self {
         let mut rng = OsRng::default();
-        BLSPublic(G2::random(&mut rng))
+        BLSPublic(G1::random(&mut rng))
     }
 
     // Need to sign on BLSPublic for proof of posession
@@ -173,7 +173,7 @@ impl BLSPublic {
         blake256(data)
     }
 
-    fn compressed(&self) -> G2Compressed {
+    fn compressed(&self) -> G1Compressed {
         self.0.into_affine().into_compressed()
     }
 
@@ -181,9 +181,9 @@ impl BLSPublic {
         self.compressed().as_ref().to_hex()
     }
 
-    fn from_bits(data: &H768) -> Result<Self, Error> {
-        let g1 = match G2Compressed::from(data.0).into_affine() {
-            Ok(g2_affine) => g2_affine.into_projective(),
+    fn from_bits(data: &H384) -> Result<Self, Error> {
+        let g1 = match G1Compressed::from(data.0).into_affine() {
+            Ok(g1_affine) => g1_affine.into_projective(),
             _ => return Err(Error::InvalidSignature),
         };
         Ok(BLSPublic(g1))
@@ -218,14 +218,14 @@ impl PartialOrd for BLSPublic {
 
 impl Encodable for BLSPublic {
     fn rlp_append(&self, s: &mut RlpStream) {
-        let data: H768 = self.compressed().as_ref().into();
+        let data: H384 = self.compressed().as_ref().into();
         data.rlp_append(s);
     }
 }
 
 impl Decodable for BLSPublic {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
-        let data = H768::decode(rlp)?;
+        let data = H384::decode(rlp)?;
         match BLSPublic::from_bits(&data) {
             Ok(public) => Ok(public),
             _ => Err(DecoderError::Custom("Invalid Public")),
@@ -237,7 +237,7 @@ impl Serialize for BLSPublic {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer, {
-        let data: H768 = self.compressed().as_ref().into();
+        let data: H384 = self.compressed().as_ref().into();
         data.serialize(serializer)
     }
 }
@@ -246,7 +246,7 @@ impl<'a> Deserialize<'a> for BLSPublic {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'a>, {
-        let data = H768::deserialize(deserializer)?;
+        let data = H384::deserialize(deserializer)?;
         match Self::from_bits(&data) {
             Ok(public) => Ok(public),
             _ => Err(D::Error::custom("Invalid Pubic")),
@@ -254,9 +254,9 @@ impl<'a> Deserialize<'a> for BLSPublic {
     }
 }
 
-impl From<G2> for BLSPublic {
-    fn from(g2: G2) -> Self {
-        BLSPublic(g2)
+impl From<G1> for BLSPublic {
+    fn from(g1: G1) -> Self {
+        BLSPublic(g1)
     }
 }
 
@@ -282,11 +282,11 @@ impl FromStr for BLSPublic {
             Ok(ref hex) if hex.len() == BLS_PUBLIC_SIZE => {
                 let mut data = [0; BLS_PUBLIC_SIZE];
                 data.copy_from_slice(&hex[0..BLS_PUBLIC_SIZE]);
-                let g2 = match G2Compressed::from(data).into_affine() {
-                    Ok(g2) => g2.into_projective(),
+                let g1 = match G1Compressed::from(data).into_affine() {
+                    Ok(g1) => g1.into_projective(),
                     _ => return Err(Error::InvalidPublic),
                 };
-                Ok(BLSPublic(g2))
+                Ok(BLSPublic(g1))
             }
             _ => Err(Error::InvalidPublic),
         }
@@ -303,7 +303,7 @@ pub struct BLSKeyPair {
 
 impl BLSKeyPair {
     pub fn from_secret(msg: H256) -> Self {
-        let (private, public) = <G1 as BLSSigCore>::keygen(msg);
+        let (private, public) = <G2 as BLSSigCore>::keygen(msg);
         Self {
             private: BLSPrivate(private),
             public: BLSPublic::from(public),
@@ -311,7 +311,7 @@ impl BLSKeyPair {
     }
 
     pub fn generate_keypair<B: AsRef<[u8]>>(secret: B) -> Self {
-        let (x_prime, pk) = G1::keygen(secret);
+        let (x_prime, pk) = G2::keygen(secret);
         BLSKeyPair {
             private: BLSPrivate(x_prime),
             public: BLSPublic::from(pk),
@@ -335,14 +335,14 @@ impl From<H256> for BLSPrivate {
 }
 
 pub fn sign_bls(private: &BLSPrivate, message: &Message) -> BLSSignature {
-    let signature = <G1 as BLSSignatureBasic>::sign(private.0, message);
+    let signature = <G2 as BLSSignatureBasic>::sign(private.0, message);
     BLSSignature::from(signature)
 }
 
 pub fn aggregate_signatures_bls(signatures: &[BLSSignature]) -> BLSSignature {
-    let signatures_g1: Vec<_> = signatures.iter().map(|sig| sig.0).collect();
-    let aggregated_signatures_g1 = <G1 as BLSSigCore>::aggregate(&signatures_g1);
-    BLSSignature::from(aggregated_signatures_g1)
+    let signatures_g2: Vec<_> = signatures.iter().map(|sig| sig.0).collect();
+    let aggregated_signatures_g2 = <G2 as BLSSigCore>::aggregate(&signatures_g2);
+    BLSSignature::from(aggregated_signatures_g2)
 }
 
 pub fn verify_aggregated_bls(
@@ -355,9 +355,9 @@ pub fn verify_aggregated_bls(
 }
 
 fn aggregate_publics_bls(publics: &[BLSPublic]) -> Result<BLSPublic, Error> {
-    let publics_g2: Vec<_> = publics.iter().map(|public| public.0).collect();
-    let aggregated_publics_g2 = <G2 as BLSSigCore>::aggregate(&publics_g2);
-    Ok(BLSPublic::from(aggregated_publics_g2))
+    let publics_g1: Vec<_> = publics.iter().map(|public| public.0).collect();
+    let aggregated_publics_g1 = <G1 as BLSSigCore>::aggregate(&publics_g1);
+    Ok(BLSPublic::from(aggregated_publics_g1))
 }
 pub fn verify_bls(public: &BLSPublic, signature: &BLSSignature, message: &Message) -> Result<bool, Error> {
     Ok(BLSSignatureBasic::verify(public.0, signature.0, message))
