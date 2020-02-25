@@ -47,8 +47,8 @@ mod random;
 
 pub use crate::address::Address;
 pub use crate::bls::{
-    aggregate_signatures_bls, sign_bls, verify_aggregated_bls, verify_bls, BLSKeyPair, BLSPrivate, BLSPublic,
-    BLSSignature,
+    aggregate_signatures_bls, sign_bls, verify_aggregated_bls, verify_bls, BlsKeyPair, BlsPrivate, BlsPublic,
+    BlsSignature,
 };
 pub use crate::ecdsa::{
     recover_ecdsa as recover, sign_ecdsa as sign, verify_ecdsa as verify, verify_ecdsa_address as verify_address,
@@ -86,5 +86,5 @@ pub trait Generator {
 
     /// Should be called to generate new keypair.
     fn generate(&mut self) -> Result<KeyPair, Self::Error>;
-    fn generate_bls(&mut self) -> Result<BLSKeyPair, Self::Error>;
+    fn generate_bls(&mut self) -> Result<BlsKeyPair, Self::Error>;
 }

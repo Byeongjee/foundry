@@ -17,7 +17,7 @@
 use super::TaggedRlp;
 use crate::util::unexpected::Mismatch;
 use crate::ShardId;
-use ckey::{Address, BLSPublic, BLSSignature};
+use ckey::{Address, BlsPublic, BlsSignature};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
@@ -54,8 +54,8 @@ pub enum Error {
         parent_height: u64,
     },
     InvalidProofOfPosessionSignature {
-        public: BLSPublic,
-        signature: BLSSignature,
+        public: BlsPublic,
+        signature: BlsSignature,
     },
 }
 

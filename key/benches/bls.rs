@@ -20,7 +20,7 @@ extern crate codechain_key as ckey;
 extern crate test;
 
 use ckey::{
-    aggregate_signatures_bls, sign_bls, verify_aggregated_bls, verify_bls, BLSPublic, BLSSignature, Generator, Message,
+    aggregate_signatures_bls, sign_bls, verify_aggregated_bls, verify_bls, BlsPublic, BlsSignature, Generator, Message,
     Random,
 };
 use test::Bencher;
@@ -107,7 +107,7 @@ fn bls_get_signatures(num_validators: usize, b: &mut Bencher) {
     b.iter(|| {
         let key_pairs = (0..num_validators).map(|_| Random.generate_bls().unwrap());
         let message = Message::random();
-        key_pairs.map(|key_pair| sign_bls(key_pair.private(), &message)).collect::<Vec<BLSSignature>>()
+        key_pairs.map(|key_pair| sign_bls(key_pair.private(), &message)).collect::<Vec<BlsSignature>>()
     })
 }
 
@@ -115,7 +115,7 @@ fn bls_aggregate_signatures(num_validators: usize, b: &mut Bencher) {
     b.iter(|| {
         let key_pairs = (0..num_validators).map(|_| Random.generate_bls().unwrap());
         let message = Message::random();
-        let signatures: Vec<BLSSignature> = key_pairs.map(|key_pair| sign_bls(key_pair.private(), &message)).collect();
+        let signatures: Vec<BlsSignature> = key_pairs.map(|key_pair| sign_bls(key_pair.private(), &message)).collect();
         aggregate_signatures_bls(&signatures)
     })
 }
@@ -124,10 +124,10 @@ fn bls_aggregate_and_verify(num_validators: usize, b: &mut Bencher) {
     b.iter(|| {
         let key_pairs: Vec<_> = (0..num_validators).map(|_| Random.generate_bls().unwrap()).collect();
         let message = Message::random();
-        let signatures: Vec<BLSSignature> =
+        let signatures: Vec<BlsSignature> =
             key_pairs.iter().map(|key_pair| sign_bls(key_pair.private(), &message)).collect();
         let aggregated_signature = aggregate_signatures_bls(&signatures);
-        let publics: Vec<BLSPublic> = key_pairs.iter().map(|key_pair| *key_pair.public()).collect();
+        let publics: Vec<BlsPublic> = key_pairs.iter().map(|key_pair| *key_pair.public()).collect();
         assert_eq!(Ok(true), verify_aggregated_bls(&publics, &aggregated_signature, &message))
     })
 }

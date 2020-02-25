@@ -39,7 +39,7 @@ use crate::transaction::{SignedTransaction, UnverifiedTransaction};
 use crate::types::BlockStatus;
 use crate::views::BlockView;
 use crate::BlockId;
-use ckey::{aggregate_signatures_bls, verify_aggregated_bls, Address, BLSSignature};
+use ckey::{aggregate_signatures_bls, verify_aggregated_bls, Address, BlsSignature};
 use cnetwork::{EventSender, NodeId};
 use crossbeam_channel as crossbeam;
 use ctypes::transaction::{Action, Transaction};
@@ -140,7 +140,7 @@ pub enum Event {
     },
     Restore(crossbeam::Sender<()>),
     ProposalBlock {
-        signature: BLSSignature,
+        signature: BlsSignature,
         view: View,
         message: Bytes,
         result: crossbeam::Sender<Option<Arc<dyn ConsensusClient>>>,
@@ -474,7 +474,7 @@ impl Worker {
         self.validators.next_block_proposer(prev_block_hash, view)
     }
 
-    fn first_proposal_at(&self, height: Height, view: View) -> Option<(BLSSignature, usize, Bytes)> {
+    fn first_proposal_at(&self, height: Height, view: View) -> Option<(BlsSignature, usize, Bytes)> {
         let vote_step = VoteStep {
             height,
             view,
@@ -1581,7 +1581,7 @@ impl Worker {
         &self,
         header: &Header,
         proposed_view: View,
-        signature: BLSSignature,
+        signature: BlsSignature,
     ) -> Option<ConsensusMessage> {
         let prev_proposer_idx = self.block_proposer_idx(*header.parent_hash())?;
         let signer_index =
@@ -1689,7 +1689,7 @@ impl Worker {
 
     fn send_proposal_block(
         &self,
-        signature: BLSSignature,
+        signature: BlsSignature,
         view: View,
         message: Bytes,
         result: crossbeam::Sender<Bytes>,
@@ -1749,7 +1749,7 @@ impl Worker {
 
     fn on_proposal_message(
         &mut self,
-        signature: BLSSignature,
+        signature: BlsSignature,
         proposed_view: View,
         bytes: Bytes,
     ) -> Option<Arc<dyn ConsensusClient>> {

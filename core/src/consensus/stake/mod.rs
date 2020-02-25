@@ -20,7 +20,7 @@ mod distribute;
 
 use crate::client::ConsensusClient;
 use ccrypto::Blake;
-use ckey::{public_to_address, recover, verify_bls, Address, BLSPublic, BLSSignature, Public, Signature};
+use ckey::{public_to_address, recover, verify_bls, Address, BlsPublic, BlsSignature, Public, Signature};
 use cstate::{ActionHandler, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::{RuntimeError, SyntaxError};
 use ctypes::util::unexpected::Mismatch;
@@ -274,8 +274,8 @@ fn redelegate(
 fn self_nominate(
     state: &mut TopLevelState,
     fee_payer: &Address,
-    public: &BLSPublic,
-    pop_signature: &BLSSignature,
+    public: &BlsPublic,
+    pop_signature: &BlsSignature,
     deposit: u64,
     current_term: u64,
     nomination_ends_at: u64,
@@ -569,7 +569,7 @@ mod tests {
     use super::*;
 
     use crate::consensus::stake::action_data::{get_delegation_key, Candidate, Prisoner};
-    use ckey::{sign_bls, BLSKeyPair, Secret};
+    use ckey::{sign_bls, BlsKeyPair, Secret};
     use cstate::tests::helpers;
     use cstate::TopStateView;
     use rlp::Encodable;
@@ -667,7 +667,7 @@ mod tests {
 
     #[test]
     fn delegate() {
-        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
         let delegatee_pubkey = Public::random();
@@ -725,7 +725,7 @@ mod tests {
 
     #[test]
     fn delegate_all() {
-        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
         let delegatee_pubkey = Public::random();
@@ -807,7 +807,7 @@ mod tests {
 
     #[test]
     fn delegate_too_much() {
-        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
         let delegatee_pubkey = Public::random();
@@ -847,7 +847,7 @@ mod tests {
 
     #[test]
     fn can_transfer_within_non_delegated_tokens() {
-        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
         let delegatee_pubkey = Public::random();
@@ -893,7 +893,7 @@ mod tests {
 
     #[test]
     fn cannot_transfer_over_non_delegated_tokens() {
-        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
         let delegatee_pubkey = Public::random();
@@ -939,7 +939,7 @@ mod tests {
 
     #[test]
     fn can_revoke_delegated_tokens() {
-        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
         let delegatee_pubkey = Public::random();
@@ -992,7 +992,7 @@ mod tests {
 
     #[test]
     fn cannot_revoke_more_than_delegated_tokens() {
-        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
         let delegatee_pubkey = Public::random();
@@ -1045,7 +1045,7 @@ mod tests {
 
     #[test]
     fn revoke_all_should_clear_state() {
-        let delegatee_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let delegatee_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let delegatee_bls_pubkey = *delegatee_bls_keypair.public();
         let delegatee_bls_private = delegatee_bls_keypair.private();
         let delegatee_pubkey = Public::random();
@@ -1096,14 +1096,14 @@ mod tests {
 
     #[test]
     fn can_redelegate_tokens() {
-        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
         let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash_with_value(&prev_delegatee));
 
-        let next_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let next_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let next_bls_pubkey = *next_bls_keypair.public();
         let next_bls_private = next_bls_keypair.private();
         let next_delegatee_pubkey = Public::random();
@@ -1168,14 +1168,14 @@ mod tests {
 
     #[test]
     fn cannot_redelegate_more_than_delegated_tokens() {
-        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
         let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash_with_value(&prev_delegatee));
 
-        let next_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let next_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let next_bls_pubkey = *next_bls_keypair.public();
         let next_bls_private = next_bls_keypair.private();
         let next_delegatee_pubkey = Public::random();
@@ -1240,14 +1240,14 @@ mod tests {
 
     #[test]
     fn redelegate_all_should_clear_state() {
-        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
         let prev_delegatee_pubkey = Public::random();
         let prev_delegatee = public_to_address(&prev_delegatee_pubkey);
         let prev_bls_pubkey_signature = sign_bls(prev_bls_private, &prev_bls_pubkey.hash_with_value(&prev_delegatee));
 
-        let next_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let next_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let next_bls_pubkey = *next_bls_keypair.public();
         let next_bls_private = next_bls_keypair.private();
         let next_delegatee_pubkey = Public::random();
@@ -1312,7 +1312,7 @@ mod tests {
 
     #[test]
     fn redelegate_only_to_candidate() {
-        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
         let prev_delegatee_pubkey = Public::random();
@@ -1363,11 +1363,11 @@ mod tests {
 
     #[test]
     fn cannot_redelegate_to_banned_account() {
-        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
 
-        let criminal_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let criminal_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let criminal_bls_pubkey = *criminal_bls_keypair.public();
         let criminal_bls_private = criminal_bls_keypair.private();
         let criminal_pubkey = Public::random();
@@ -1448,14 +1448,14 @@ mod tests {
 
     #[test]
     fn cannot_redelegate_to_jailed_account() {
-        let jail_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let jail_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let jail_bls_pubkey = *jail_bls_keypair.public();
         let jail_bls_private = jail_bls_keypair.private();
         let jail_pubkey = Public::random();
         let jail_address = public_to_address(&jail_pubkey);
         let jail_bls_pubkey_signature = sign_bls(jail_bls_private, &jail_bls_pubkey.hash_with_value(&jail_address));
 
-        let prev_bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let prev_bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let prev_bls_pubkey = *prev_bls_keypair.public();
         let prev_bls_private = prev_bls_keypair.private();
         let prev_delegatee_pubkey = Public::random();
@@ -1527,7 +1527,7 @@ mod tests {
 
     #[test]
     fn self_nominate_deposit_test() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
 
@@ -1598,7 +1598,7 @@ mod tests {
 
     #[test]
     fn self_nominate_fail_with_insufficient_balance() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let address_pubkey = Public::random();
@@ -1626,7 +1626,7 @@ mod tests {
 
     #[test]
     fn self_nominate_returns_deposits_after_expiration() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let address_pubkey = Public::random();
@@ -1670,7 +1670,7 @@ mod tests {
 
     #[test]
     fn self_nominate_reverts_delegations_after_expiration() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let address_pubkey = Public::random();
@@ -1718,7 +1718,7 @@ mod tests {
 
     #[test]
     fn jail_candidate() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let address_pubkey = Public::random();
@@ -1760,7 +1760,7 @@ mod tests {
 
     #[test]
     fn cannot_self_nominate_while_custody() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let address_pubkey = Public::random();
@@ -1814,7 +1814,7 @@ mod tests {
 
     #[test]
     fn can_self_nominate_after_custody() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let address_pubkey = Public::random();
@@ -1883,7 +1883,7 @@ mod tests {
 
     #[test]
     fn jail_released_after() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let address_pubkey = Public::random();
@@ -1937,7 +1937,7 @@ mod tests {
 
     #[test]
     fn cannot_delegate_until_released() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let address_pubkey = Public::random();
@@ -1995,7 +1995,7 @@ mod tests {
 
     #[test]
     fn kick_reverts_delegations() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let address_pubkey = Public::random();
@@ -2052,7 +2052,7 @@ mod tests {
 
     #[test]
     fn self_nomination_before_kick_preserves_delegations() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let address_pubkey = Public::random();
@@ -2112,7 +2112,7 @@ mod tests {
 
     #[test]
     fn test_ban() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let informant_pubkey = Public::random();
@@ -2159,7 +2159,7 @@ mod tests {
 
     #[test]
     fn ban_should_remove_prisoner_from_jail() {
-        let bls_keypair = BLSKeyPair::from_secret(Secret::random());
+        let bls_keypair = BlsKeyPair::from_secret(Secret::random());
         let bls_pubkey = *bls_keypair.public();
         let bls_private = bls_keypair.private();
         let informant_pubkey = Public::random();

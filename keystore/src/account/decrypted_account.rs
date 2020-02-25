@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ckey::{
-    sign, sign_bls, BLSKeyPair, BLSPrivate, BLSPublic, BLSSignature, Error as KeyError, KeyPair, Message, Private,
+    sign, sign_bls, BlsKeyPair, BlsPrivate, BlsPublic, BlsSignature, Error as KeyError, KeyPair, Message, Private,
     Public, Secret, Signature,
 };
 
@@ -38,8 +38,8 @@ impl DecryptedAccount {
     }
 
     /// Sign a message with Schnorr scheme.
-    pub fn sign_bls(&self, message: &Message) -> BLSSignature {
-        sign_bls(&BLSPrivate::from(self.secret), message)
+    pub fn sign_bls(&self, message: &Message) -> BlsSignature {
+        sign_bls(&BlsPrivate::from(self.secret), message)
     }
 
     /// Derive public key.
@@ -47,14 +47,14 @@ impl DecryptedAccount {
         Ok(*KeyPair::from_private(Private::from(self.secret))?.public())
     }
 
-    /// Derive BLS public key for block signing.
-    pub fn bls_public(&self) -> BLSPublic {
-        *BLSKeyPair::from_secret(self.secret).public()
+    /// Derive Bls public key for block signing.
+    pub fn bls_public(&self) -> BlsPublic {
+        *BlsKeyPair::from_secret(self.secret).public()
     }
 
-    /// Signature of BLS public key signed by oneself.
+    /// Signature of Bls public key signed by oneself.
     /// This is for proof of posession.
-    pub fn pop_signature<B: AsRef<[u8]>>(&self, to_concat: B) -> BLSSignature {
+    pub fn pop_signature<B: AsRef<[u8]>>(&self, to_concat: B) -> BlsSignature {
         let public = self.bls_public();
         self.sign_bls(&public.hash_with_value(to_concat))
     }

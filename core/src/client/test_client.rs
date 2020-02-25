@@ -48,7 +48,7 @@ use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb;
 use ckey::{
-    public_to_address, Address, BLSKeyPair, BLSPrivate, BLSPublic, Generator, KeyPair, NetworkId, PlatformAddress,
+    public_to_address, Address, BlsKeyPair, BlsPrivate, BlsPublic, Generator, KeyPair, NetworkId, PlatformAddress,
     Private, Public, Random,
 };
 use cnetwork::NodeId;
@@ -104,7 +104,7 @@ pub struct TestBlockChainClient {
     /// Term ID
     pub term_id: Option<u64>,
     /// Fixed validator keys
-    pub validator_keys: RwLock<HashMap<BLSPublic, BLSPrivate>>,
+    pub validator_keys: RwLock<HashMap<BlsPublic, BlsPrivate>>,
     /// Fixed validators
     pub validators: NextValidators,
 }
@@ -313,10 +313,10 @@ impl TestBlockChainClient {
 
     /// Set validators which can be brought from state.
     pub fn set_random_validators(&mut self, count: usize) {
-        let mut validators: Vec<(Address, BLSPublic)> = vec![];
+        let mut validators: Vec<(Address, BlsPublic)> = vec![];
         for _ in 0..count {
             let random_secret = H256::random();
-            let bls_key_pair = BLSKeyPair::from_secret(random_secret);
+            let bls_key_pair = BlsKeyPair::from_secret(random_secret);
             let address = KeyPair::from_private(Private::from(random_secret)).unwrap().address();
             self.validator_keys.write().insert(*bls_key_pair.public(), *bls_key_pair.private());
             validators.push((address, *bls_key_pair.public()));

@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::uint::Uint;
-use ckey::{Address, BLSPublic, PlatformAddress};
+use ckey::{Address, BlsPublic, PlatformAddress};
 use std::collections::HashMap;
 
 /// Tendermint params deserialization.
@@ -23,7 +23,7 @@ use std::collections::HashMap;
 #[serde(rename_all = "camelCase")]
 pub struct TendermintParams {
     /// Valid validators.
-    pub validators: Vec<(Address, BLSPublic)>,
+    pub validators: Vec<(Address, BlsPublic)>,
     /// Propose step timeout in milliseconds.
     pub timeout_propose: Option<Uint>,
     /// Propose step timeout delta in milliseconds.
@@ -58,7 +58,7 @@ pub struct Tendermint {
 mod tests {
     use std::str::FromStr;
 
-    use ckey::{Address, BLSPublic};
+    use ckey::{Address, BlsPublic};
     use serde_json;
 
     use super::Tendermint;
@@ -74,7 +74,7 @@ mod tests {
 
         let deserialized: Tendermint = serde_json::from_str(s).unwrap();
         let address = Address::from_str("c1f7057e36205fe711c1d645c6c037d10e40e0a8").unwrap();
-        let bls_public = BLSPublic::from_str("81fc91b26e2bb60e4f1936d63ec3d540507578d38ee3800a691de957419f2f455ce074cb6ef2e179434cf900c6eac9d80af3ac0c7b1b56f118826f33272b8f2cdd62cde37505e2fa3f3f8c89740513c5c055099c02cbed96d26ecef84d224768").unwrap();
+        let bls_public = BlsPublic::from_str("81fc91b26e2bb60e4f1936d63ec3d540507578d38ee3800a691de957419f2f455ce074cb6ef2e179434cf900c6eac9d80af3ac0c7b1b56f118826f33272b8f2cdd62cde37505e2fa3f3f8c89740513c5c055099c02cbed96d26ecef84d224768").unwrap();
         let validators = vec![(address, bls_public)];
         assert_eq!(deserialized.params.validators, validators);
     }

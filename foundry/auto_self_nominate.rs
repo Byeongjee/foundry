@@ -22,7 +22,7 @@ use ccore::{
     UnverifiedTransaction,
 };
 use ckey::PlatformAddress;
-use ckey::{Address, BLSPublic, BLSSignature, Public, Signature};
+use ckey::{Address, BlsPublic, BlsSignature, Public, Signature};
 use ckeystore::DecryptedAccount;
 use clap::ArgMatches;
 use codechain_types::transaction::{Action, Transaction};
@@ -68,17 +68,17 @@ impl SelfSigner {
         self.signer.as_ref().map(|(address, _)| address)
     }
 
-    pub fn bls_public(&self) -> Result<BLSPublic, AccountProviderError> {
+    pub fn bls_public(&self) -> Result<BlsPublic, AccountProviderError> {
         let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
         match &self.decrypted_account {
             Some(account) => Ok(account.bls_public()),
             None => Ok(self.account_provider.get_unlocked_account(&address)?.deref().bls_public()),
         }
     }
-    // concatenate BLS public key and address, and then sign on it
+    // concatenate Bls public key and address, and then sign on it
     // this proof of posession is required to prevent rogue key attacks
     // concatenation with address is required to prevent replay attacks
-    pub fn pop_signature(&self) -> Result<BLSSignature, AccountProviderError> {
+    pub fn pop_signature(&self) -> Result<BlsSignature, AccountProviderError> {
         let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
         match &self.decrypted_account {
             Some(account) => Ok(account.pop_signature(&address)),

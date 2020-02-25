@@ -17,7 +17,7 @@
 use super::super::BitSet;
 use super::message::VoteStep;
 use crate::block::{IsBlock, SealedBlock};
-use ckey::BLSSignature;
+use ckey::BlsSignature;
 use ctypes::BlockHash;
 use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -244,11 +244,11 @@ impl<'a> TendermintSealView<'a> {
         Rlp::new(view_rlp.as_slice()).as_val()
     }
 
-    pub fn precommit_signature(&self) -> Result<BLSSignature, DecoderError> {
+    pub fn precommit_signature(&self) -> Result<BlsSignature, DecoderError> {
         Rlp::new(
             &self.seal.get(2).expect("block went through verify_block_basic; block has .seal_fields() fields; qed"),
         )
-        .as_val::<BLSSignature>()
+        .as_val::<BlsSignature>()
     }
 }
 
@@ -286,13 +286,13 @@ impl TwoThirdsMajority {
 
 #[derive(Debug, PartialEq)]
 pub enum Proposal {
-    ProposalReceived(BlockHash, Bytes, BLSSignature),
+    ProposalReceived(BlockHash, Bytes, BlsSignature),
     ProposalImported(BlockHash),
     None,
 }
 
 impl Proposal {
-    pub fn new_received(hash: BlockHash, block: Bytes, signature: BLSSignature) -> Self {
+    pub fn new_received(hash: BlockHash, block: Bytes, signature: BlsSignature) -> Self {
         Proposal::ProposalReceived(hash, block, signature)
     }
 

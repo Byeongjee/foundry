@@ -17,7 +17,7 @@
 use super::super::BitSet;
 use super::{Height, Step, View};
 use ccrypto::blake256;
-use ckey::{verify_bls, BLSPublic, BLSSignature, Error as KeyError};
+use ckey::{verify_bls, BlsPublic, BlsSignature, Error as KeyError};
 use ctypes::BlockHash;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -108,7 +108,7 @@ impl Decodable for MessageID {
 pub enum TendermintMessage {
     ConsensusMessage(Vec<Bytes>),
     ProposalBlock {
-        signature: BLSSignature,
+        signature: BlsSignature,
         view: View,
         message: Bytes,
     },
@@ -348,12 +348,12 @@ impl VoteOn {
 #[derive(Debug, PartialEq, Eq, Clone, Hash, Default, RlpDecodable, RlpEncodable)]
 pub struct ConsensusMessage {
     pub on: VoteOn,
-    pub signature: BLSSignature,
+    pub signature: BlsSignature,
     pub signer_index: usize,
 }
 
 impl ConsensusMessage {
-    pub fn signature(&self) -> BLSSignature {
+    pub fn signature(&self) -> BlsSignature {
         self.signature
     }
 
@@ -373,7 +373,7 @@ impl ConsensusMessage {
         self.on.step.height
     }
 
-    pub fn verify(&self, signer_public: &BLSPublic) -> Result<bool, KeyError> {
+    pub fn verify(&self, signer_public: &BlsPublic) -> Result<bool, KeyError> {
         verify_bls(signer_public, &self.signature, &self.on.hash())
     }
 }
@@ -405,7 +405,7 @@ mod tests {
     #[test]
     fn encode_and_decode_tendermint_message_2() {
         rlp_encode_and_decode_test!(TendermintMessage::ProposalBlock {
-            signature: BLSSignature::random(),
+            signature: BlsSignature::random(),
             view: 1,
             message: vec![1u8, 2u8]
         });
@@ -454,7 +454,7 @@ mod tests {
             block: vec![1u8, 2u8],
             votes: vec![
                 ConsensusMessage {
-                    signature: BLSSignature::random(),
+                    signature: BlsSignature::random(),
                     signer_index: 0x1234,
                     on: VoteOn {
                         step: VoteStep::new(2, 3, Step::Commit),
@@ -464,7 +464,7 @@ mod tests {
                     },
                 },
                 ConsensusMessage {
-                    signature: BLSSignature::random(),
+                    signature: BlsSignature::random(),
                     signer_index: 0x1235,
                     on: VoteOn {
                         step: VoteStep::new(2, 3, Step::Commit),
@@ -486,7 +486,7 @@ mod tests {
     #[test]
     fn encode_and_decode_consensus_message_2() {
         let message = ConsensusMessage {
-            signature: BLSSignature::random(),
+            signature: BlsSignature::random(),
             signer_index: 0x1234,
             on: VoteOn {
                 step: VoteStep::new(2, 3, Step::Commit),
@@ -501,7 +501,7 @@ mod tests {
         let height = 2;
         let view = 3;
         let step = Step::Commit;
-        let signature = BLSSignature::random();
+        let signature = BlsSignature::random();
         let signer_index = 0x1234;
         let block_hash = Some(H256::from("07feab4c39250abf60b77d7589a5b61fdf409bd837e936376381d19db1e1f050").into());
         let consensus_message = ConsensusMessage {

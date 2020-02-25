@@ -40,7 +40,7 @@ use crate::error::Error;
 use crate::transaction::UnverifiedTransaction;
 use crate::views::HeaderView;
 use crate::Client;
-use ckey::{Address, BLSSignature};
+use ckey::{Address, BlsSignature};
 use cnetwork::NetworkService;
 use cstate::ActionHandler;
 use ctypes::errors::SyntaxError;
@@ -56,7 +56,7 @@ pub enum Seal {
     Tendermint {
         prev_view: View,
         cur_view: View,
-        precommit_signature: BLSSignature,
+        precommit_signature: BlsSignature,
         precommit_bitset: BitSet,
     },
     None,

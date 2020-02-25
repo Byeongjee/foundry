@@ -17,7 +17,7 @@
 use crate::client::ConsensusClient;
 use crate::consensus::{ConsensusMessage, ValidatorSet};
 use ccrypto::Blake;
-use ckey::{recover, Address, BLSPublic, BLSSignature, Signature};
+use ckey::{recover, Address, BlsPublic, BlsSignature, Signature};
 use ctypes::errors::SyntaxError;
 use ctypes::CommonParams;
 use primitives::{Bytes, H256};
@@ -79,8 +79,8 @@ pub enum Action {
     },
     SelfNominate {
         deposit: u64,
-        public: BLSPublic,
-        signature: BLSSignature,
+        public: BlsPublic,
+        signature: BlsSignature,
         metadata: Bytes,
     },
     ChangeParams {
@@ -194,7 +194,7 @@ impl Action {
                     .hash();
                 let signer_public = validators.get_public(&parent_hash, signer_idx1);
                 if message1.verify(&signer_public) != Ok(true) || message2.verify(&signer_public) != Ok(true) {
-                    return Err(SyntaxError::InvalidCustomAction(String::from("BLS signature verification fails")))
+                    return Err(SyntaxError::InvalidCustomAction(String::from("Bls signature verification fails")))
                 }
             }
         }
@@ -472,7 +472,7 @@ mod tests {
         let mut test_client = TestBlockChainClient::default();
         test_client.add_blocks(10, 1);
         test_client.set_random_validators(10);
-        let validators: Vec<(Address, BLSPublic)> =
+        let validators: Vec<(Address, BlsPublic)> =
             test_client.get_validators().iter().map(|val| (*val.address(), *val.pubkey())).collect();
         let validator_set = DynamicValidator::new(validators);
 
@@ -647,7 +647,7 @@ mod tests {
             &vote_step_twister,
             &|v| v,
         );
-        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("BLS signature verification fails")));
+        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Bls signature verification fails")));
         assert_eq!(result, expected_err);
     }
 
@@ -680,7 +680,7 @@ mod tests {
             &|v| v,
             &block_hash_twister,
         );
-        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("BLS signature verification fails")));
+        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Bls signature verification fails")));
         assert_eq!(result, expected_err);
     }
 }
