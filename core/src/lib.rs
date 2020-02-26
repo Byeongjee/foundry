@@ -84,3 +84,4 @@ pub use crate::transaction::{
     LocalizedTransaction, PendingSignedTransactions, SignedTransaction, UnverifiedTransaction,
 };
 pub use crate::types::{BlockId, BlockStatus, TransactionId};
+pub use crate::consensus::TendermintSealView;

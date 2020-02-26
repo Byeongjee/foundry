@@ -138,4 +138,7 @@ pub trait Chain {
     /// Execute Transactions
     #[rpc(name = "chain_executeTransaction")]
     fn execute_transaction(&self, tx: UnsignedTransaction, sender: PlatformAddress) -> Result<Option<String>>;
+
+    #[rpc(name = "chain_getNumView0andNot")]
+    fn get_num_view_0_and_not(&self)  -> Result<(usize, usize)>;
 }

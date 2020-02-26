@@ -18,6 +18,7 @@ use super::super::errors;
 use super::super::traits::Chain;
 use super::super::types::{Block, BlockNumberAndHash, Transaction, UnsignedTransaction};
 use ccore::{AccountData, BlockId, EngineInfo, ExecuteClient, MiningBlockChainClient, Shard, TermInfo};
+use ccore::TendermintSealView;
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{public_to_address, NetworkId, PlatformAddress, Public};
@@ -251,5 +252,18 @@ where
         } else {
             Err(errors::shard_transaction_only())
         }
+    }
+
+    fn get_num_view_0_and_not(&self)  -> Result<(usize, usize)> {
+        let best_block_number = self.client.chain_info().best_block_number; 
+        let num_block_1 = 
+        (1..best_block_number).filter( |block_number| {
+            let block = self.get_block_by_number(*block_number).unwrap().unwrap();
+            let seal = block.seal();
+            let seal_view = TendermintSealView::new(seal);
+            seal_view.parent_block_finalized_view().unwrap() == 0
+        }).count();
+        let num_block_not_1 = best_block_number as usize - num_block_1;
+        Ok((num_block_1, num_block_not_1))
     }
 }

@@ -70,6 +70,9 @@ impl Block {
             transactions: transactions.map(From::from).collect(),
         }
     }
+    pub fn seal(&self) -> &Vec<Vec<u8>> {
+        &self.seal
+    }
 }
 
 #[derive(Debug, Serialize)]
