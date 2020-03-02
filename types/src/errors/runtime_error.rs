@@ -17,7 +17,7 @@
 use super::TaggedRlp;
 use crate::util::unexpected::Mismatch;
 use crate::ShardId;
-use ckey::{Address, BlsPublic, BlsSignature};
+use ckey::{Address, BlsPublic,BlsPublicUnverified, BlsSignature};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::ops::Deref;
@@ -54,6 +54,7 @@ pub enum Error {
         public: Box<BlsPublic>,
         signature: Box<BlsSignature>,
     },
+    InvalidBlsPublic(BlsPublicUnverified),
 }
 
 #[derive(Clone, Copy)]
@@ -71,6 +72,7 @@ enum ErrorID {
     InsufficientStakes = 10,
     InvalidValidatorIndex = 11,
     InvalidProofOfPosessionSignature = 12,
+    InvalidBlsPublic = 13,
 }
 
 impl Encodable for ErrorID {
@@ -95,6 +97,7 @@ impl Decodable for ErrorID {
             10 => Ok(ErrorID::InsufficientStakes),
             11 => Ok(ErrorID::InvalidValidatorIndex),
             12 => Ok(ErrorID::InvalidProofOfPosessionSignature),
+            13 => Ok(ErrorID::InvalidBlsPublic),
             _ => Err(DecoderError::Custom("Unexpected ActionTag Value")),
         }
     }
@@ -118,6 +121,7 @@ impl TaggedRlp for RlpHelper {
             ErrorID::InsufficientStakes => 3,
             ErrorID::InvalidValidatorIndex => 3,
             ErrorID::InvalidProofOfPosessionSignature => 3,
+            ErrorID::InvalidBlsPublic => 1,
         })
     }
 }
@@ -161,6 +165,7 @@ impl Encodable for Error {
             } => RlpHelper::new_tagged_list(s, ErrorID::InvalidProofOfPosessionSignature)
                 .append(public.deref())
                 .append(signature.deref()),
+            Error::InvalidBlsPublic(public) => RlpHelper::new_tagged_list(s, ErrorID::InvalidBlsPublic).append(public),
         };
     }
 }
@@ -197,6 +202,7 @@ impl Decodable for Error {
                 public: Box::new(rlp.val_at(1)?),
                 signature: Box::new(rlp.val_at(2)?),
             },
+            ErrorID::InvalidBlsPublic => Error::InvalidBlsPublic(rlp.val_at(1)?),
         };
         RlpHelper::check_size(rlp, tag)?;
         Ok(error)

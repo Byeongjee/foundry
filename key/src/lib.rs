@@ -46,7 +46,7 @@ mod random;
 
 pub use crate::address::Address;
 pub use crate::bls::{
-    aggregate_signatures_bls, sign_bls, verify_aggregated_bls, verify_bls, BlsKeyPair, BlsPrivate, BlsPublic,
+    aggregate_signatures_bls, sign_bls, verify_aggregated_bls, verify_bls, BlsKeyPair, BlsPrivate, BlsPublic, BlsPublicUnverified,
     BlsSignature,
 };
 pub use crate::ecdsa::{

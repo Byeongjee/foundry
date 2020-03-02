@@ -274,7 +274,7 @@ fn redelegate(
 fn self_nominate(
     state: &mut TopLevelState,
     fee_payer: &Address,
-    public: &BlsPublic,
+    public_unverified: &BlsPublicUnverified,
     pop_signature: &BlsSignature,
     deposit: u64,
     current_term: u64,
@@ -296,6 +296,11 @@ fn self_nominate(
             assert_eq!(&prisoner.address, fee_payer);
             prisoner.deposit + deposit
         }
+    };
+
+    let public = match BlsPublic::from_unverified(public_unverified) {
+        Ok(public) => public,
+        Err(_) => return Err(RuntimeError::InvalidBlsPublic(public_unverified)),
     };
 
     match verify_bls(public, pop_signature, &public.hash_with_value(fee_payer)) {
