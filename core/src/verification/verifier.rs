@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::consensus::CodeChainEngine;
+use crate::consensus::ConsensusEngine;
 use crate::error::Error;
 use ctypes::{CommonParams, Header};
 
@@ -26,12 +26,12 @@ pub trait Verifier: Send + Sync {
         block: &[u8],
         header: &Header,
         parent: &Header,
-        engine: &dyn CodeChainEngine,
+        engine: &dyn ConsensusEngine,
         common_params: &CommonParams,
     ) -> Result<(), Error>;
 
     /// Do a final verification check for an enacted header vs its expected counterpart.
     fn verify_block_final(&self, expected: &Header, got: &Header) -> Result<(), Error>;
     /// Verify a block, inspecting external state.
-    fn verify_block_external(&self, header: &Header, engine: &dyn CodeChainEngine) -> Result<(), Error>;
+    fn verify_block_external(&self, header: &Header, engine: &dyn ConsensusEngine) -> Result<(), Error>;
 }

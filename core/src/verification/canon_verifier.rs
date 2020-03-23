@@ -16,7 +16,7 @@
 
 use super::verification;
 use super::Verifier;
-use crate::consensus::CodeChainEngine;
+use crate::consensus::ConsensusEngine;
 use crate::error::Error;
 use ctypes::{CommonParams, Header};
 
@@ -29,7 +29,7 @@ impl Verifier for CanonVerifier {
         block: &[u8],
         header: &Header,
         parent: &Header,
-        engine: &dyn CodeChainEngine,
+        engine: &dyn ConsensusEngine,
         common_params: &CommonParams,
     ) -> Result<(), Error> {
         verification::verify_block_family(block, header, parent, engine, common_params)
@@ -39,7 +39,7 @@ impl Verifier for CanonVerifier {
         verification::verify_block_final(expected, got)
     }
 
-    fn verify_block_external(&self, header: &Header, engine: &dyn CodeChainEngine) -> Result<(), Error> {
+    fn verify_block_external(&self, header: &Header, engine: &dyn ConsensusEngine) -> Result<(), Error> {
         engine.verify_block_external(header)
     }
 }

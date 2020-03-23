@@ -17,7 +17,7 @@
 pub mod kind;
 
 use self::kind::{BlockLike, Kind, MemUsage};
-use crate::consensus::CodeChainEngine;
+use crate::consensus::ConsensusEngine;
 use crate::error::{BlockError, Error, ImportError};
 use crate::service::ClientIoMessage;
 use crate::types::{BlockStatus as Status, VerificationQueueInfo as QueueInfo};
@@ -61,7 +61,7 @@ impl Default for Config {
 }
 
 pub struct VerificationQueue<K: Kind> {
-    engine: Arc<dyn CodeChainEngine>,
+    engine: Arc<dyn ConsensusEngine>,
     verification: Arc<Verification<K>>,
     processing: RwLock<HashSet<BlockHash>>, // hash to block number
     deleting: Arc<AtomicBool>,
@@ -118,7 +118,7 @@ impl QueueSignal {
 impl<K: Kind> VerificationQueue<K> {
     pub fn new(
         config: &Config,
-        engine: Arc<dyn CodeChainEngine>,
+        engine: Arc<dyn ConsensusEngine>,
         message_channel: IoChannel<ClientIoMessage>,
         check_seal: bool,
     ) -> Self {
@@ -189,7 +189,7 @@ impl<K: Kind> VerificationQueue<K> {
 
     fn verify(
         verification: &Verification<K>,
-        engine: &dyn CodeChainEngine,
+        engine: &dyn ConsensusEngine,
         ready_signal: &QueueSignal,
         empty: &SCondvar,
         more_to_verify: &SCondvar,

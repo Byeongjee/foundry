@@ -16,7 +16,7 @@
 
 pub use self::blocks::Blocks;
 pub use self::headers::Headers;
-use crate::consensus::CodeChainEngine;
+use crate::consensus::ConsensusEngine;
 use crate::error::Error;
 use crate::service::ClientIoMessage;
 use ctypes::BlockHash;
@@ -65,12 +65,12 @@ pub trait Kind: 'static + Sized + Send + Sync {
     fn name() -> &'static str;
 
     /// Attempt to create the `Unverified` item from the input.
-    fn create(input: Self::Input, engine: &dyn CodeChainEngine) -> Result<Self::Unverified, Error>;
+    fn create(input: Self::Input, engine: &dyn ConsensusEngine) -> Result<Self::Unverified, Error>;
 
     /// Attempt to verify the `Unverified` item using the given engine.
     fn verify(
         unverified: Self::Unverified,
-        engine: &dyn CodeChainEngine,
+        engine: &dyn ConsensusEngine,
         check_seal: bool,
     ) -> Result<Self::Verified, Error>;
 
@@ -83,7 +83,7 @@ pub mod headers {
 
     use super::super::super::verification::verify_header_basic;
     use super::{BlockLike, Kind};
-    use crate::consensus::CodeChainEngine;
+    use crate::consensus::ConsensusEngine;
     use crate::error::Error;
     use crate::service::ClientIoMessage;
     use crate::verification::verify_header_with_engine;
@@ -110,7 +110,7 @@ pub mod headers {
             "Headers"
         }
 
-        fn create(input: Self::Input, engine: &dyn CodeChainEngine) -> Result<Self::Unverified, Error> {
+        fn create(input: Self::Input, engine: &dyn ConsensusEngine) -> Result<Self::Unverified, Error> {
             // FIXME: this doesn't seem to match with full block verification
             verify_header_basic(&input)?;
             verify_header_with_engine(&input, engine)?;
@@ -119,7 +119,7 @@ pub mod headers {
 
         fn verify(
             un: Self::Unverified,
-            engine: &dyn CodeChainEngine,
+            engine: &dyn ConsensusEngine,
             check_seal: bool,
         ) -> Result<Self::Verified, Error> {
             if check_seal {
@@ -144,7 +144,7 @@ pub mod blocks {
         verify_block_basic, verify_block_seal, verify_header_with_engine, PreverifiedBlock,
     };
     use super::{BlockLike, Kind, MemUsage};
-    use crate::consensus::CodeChainEngine;
+    use crate::consensus::ConsensusEngine;
     use crate::error::Error;
     use crate::service::ClientIoMessage;
 
@@ -160,7 +160,7 @@ pub mod blocks {
             "Blocks"
         }
 
-        fn create(input: Self::Input, engine: &dyn CodeChainEngine) -> Result<Self::Unverified, Error> {
+        fn create(input: Self::Input, engine: &dyn ConsensusEngine) -> Result<Self::Unverified, Error> {
             match verify_block_basic(&input.header, &input.bytes)
                 .and_then(|_| verify_header_with_engine(&input.header, engine))
             {
@@ -174,7 +174,7 @@ pub mod blocks {
 
         fn verify(
             un: Self::Unverified,
-            engine: &dyn CodeChainEngine,
+            engine: &dyn ConsensusEngine,
             check_seal: bool,
         ) -> Result<Self::Verified, Error> {
             let hash = un.hash();

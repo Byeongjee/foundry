@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::Verifier;
-use crate::consensus::CodeChainEngine;
+use crate::consensus::ConsensusEngine;
 use crate::error::Error;
 use ctypes::{CommonParams, Header};
 
@@ -28,7 +28,7 @@ impl Verifier for NoopVerifier {
         _block: &[u8],
         _: &Header,
         _t: &Header,
-        _: &dyn CodeChainEngine,
+        _: &dyn ConsensusEngine,
         _common_params: &CommonParams,
     ) -> Result<(), Error> {
         Ok(())
@@ -38,7 +38,7 @@ impl Verifier for NoopVerifier {
         Ok(())
     }
 
-    fn verify_block_external(&self, _header: &Header, _engine: &dyn CodeChainEngine) -> Result<(), Error> {
+    fn verify_block_external(&self, _header: &Header, _engine: &dyn ConsensusEngine) -> Result<(), Error> {
         Ok(())
     }
 }
