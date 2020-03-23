@@ -620,6 +620,7 @@ dependencies = [
  "codechain-state",
  "codechain-timer",
  "codechain-types",
+ "coordinator",
  "kvdb",
  "kvdb-memorydb",
  "log 0.4.6",
