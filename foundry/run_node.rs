@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::auto_self_nominate::AutoSelfNomination;
 use crate::config::{self, load_config};
 use crate::constants::{DEFAULT_DB_PATH, DEFAULT_KEYS_PATH};
 use crate::dummy_network_service::DummyNetworkService;
@@ -77,9 +76,13 @@ fn network_start(
     Ok(service)
 }
 
-fn self_nominate_start(c: Arc<dyn ConsensusClient>, matches: &ArgMatches, ap: Arc<AccountProvider>, address: Address) {
-    let auto_self_nominate = AutoSelfNomination::new(c, ap, address);
-    auto_self_nominate.send_self_nominate_transaction(matches);
+fn self_nominate_start(
+    _c: Arc<dyn ConsensusClient>,
+    _matches: &ArgMatches,
+    _ap: Arc<AccountProvider>,
+    _address: Address,
+) {
+    unimplemented!()
 }
 
 fn discovery_start(
@@ -123,7 +126,7 @@ fn new_miner(
     ap: Arc<AccountProvider>,
     db: Arc<dyn KeyValueDB>,
 ) -> Result<Arc<Miner>, String> {
-    let miner = Miner::new(config.miner_options()?, scheme, Some(ap), db);
+    let miner = Miner::new(config.miner_options()?, scheme, db);
 
     match miner.engine_type() {
         EngineType::PBFT => match &config.mining.engine_signer {
@@ -275,7 +278,7 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
 
     let miner = new_miner(&config, &scheme, ap.clone(), Arc::clone(&db))?;
     let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone())?;
-    miner.recover_from_db(client.client().as_ref());
+    miner.recover_from_db();
 
     let mut _maybe_sync = None;
     let mut maybe_sync_sender = None;
