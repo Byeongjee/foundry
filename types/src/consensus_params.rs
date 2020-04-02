@@ -17,6 +17,7 @@
 use cjson::scheme::Params;
 use ckey::NetworkId;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use std::str::FromStr;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct ConsensusParams {
@@ -31,7 +32,7 @@ pub struct ConsensusParams {
     /// Snapshot creation period in unit of block numbers.
     snapshot_period: u64,
 
-    term_seconds: u64
+    term_seconds: u64,
 }
 
 impl ConsensusParams {

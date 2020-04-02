@@ -18,7 +18,7 @@ use super::verification;
 use super::Verifier;
 use crate::consensus::ConsensusEngine;
 use crate::error::Error;
-use ctypes::{CommonParams, Header};
+use ctypes::{ConsensusParams, Header};
 
 /// A canonial verifier -- this does full verification.
 pub struct CanonVerifier;
@@ -30,9 +30,9 @@ impl Verifier for CanonVerifier {
         header: &Header,
         parent: &Header,
         engine: &dyn ConsensusEngine,
-        common_params: &CommonParams,
+        consensus_params: &ConsensusParams,
     ) -> Result<(), Error> {
-        verification::verify_block_family(block, header, parent, engine, common_params)
+        verification::verify_block_family(block, header, parent, engine, consensus_params)
     }
 
     fn verify_block_final(&self, expected: &Header, got: &Header) -> Result<(), Error> {

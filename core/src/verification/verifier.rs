@@ -16,7 +16,7 @@
 
 use crate::consensus::ConsensusEngine;
 use crate::error::Error;
-use ctypes::{CommonParams, Header};
+use ctypes::{ConsensusParams, Header};
 
 /// Should be used to verify blocks.
 pub trait Verifier: Send + Sync {
@@ -27,7 +27,7 @@ pub trait Verifier: Send + Sync {
         header: &Header,
         parent: &Header,
         engine: &dyn ConsensusEngine,
-        common_params: &CommonParams,
+        consensus_params: &ConsensusParams,
     ) -> Result<(), Error>;
 
     /// Do a final verification check for an enacted header vs its expected counterpart.

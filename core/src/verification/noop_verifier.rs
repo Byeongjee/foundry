@@ -17,7 +17,7 @@
 use super::Verifier;
 use crate::consensus::ConsensusEngine;
 use crate::error::Error;
-use ctypes::{CommonParams, Header};
+use ctypes::{ConsensusParams, Header};
 
 /// A no-op verifier -- this will verify everything it's given immediately.
 pub struct NoopVerifier;
@@ -29,7 +29,7 @@ impl Verifier for NoopVerifier {
         _: &Header,
         _t: &Header,
         _: &dyn ConsensusEngine,
-        _common_params: &CommonParams,
+        _consensus_params: &ConsensusParams,
     ) -> Result<(), Error> {
         Ok(())
     }

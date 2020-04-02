@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::CacheableItem;
-use ctypes::{CommonParams, StorageId, TxHash};
+use ctypes::{CommonParams, ConsensusParams, StorageId, TxHash};
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -28,10 +28,11 @@ pub struct Metadata {
     seq: u64,
     params: CommonParams,
     term_params: CommonParams,
+    consensus_params: ConsensusParams,
 }
 
 impl Metadata {
-    pub fn new(params: CommonParams) -> Self {
+    pub fn new(params: CommonParams, consensus_params: ConsensusParams) -> Self {
         Self {
             number_of_modules: 0,
             hashes: vec![],
@@ -39,6 +40,7 @@ impl Metadata {
             current_term_id: 0,
             seq: 0,
             params,
+            consensus_params,
             term_params: params,
         }
     }
@@ -77,6 +79,14 @@ impl Metadata {
         self.term_params = self.params;
     }
 
+    pub fn consensus_params(&self) -> &ConsensusParams {
+        &self.consensus_params
+    }
+
+    pub fn set_consensus_params(&mut self, consensus_params: ConsensusParams) {
+        self.consensus_params = consensus_params;
+    }
+
     pub fn increase_term_id(&mut self, last_term_finished_block_num: u64) {
         assert!(self.last_term_finished_block_num < last_term_finished_block_num);
         self.last_term_finished_block_num = last_term_finished_block_num;
@@ -104,7 +114,7 @@ const PREFIX: u8 = super::Prefix::Metadata as u8;
 
 impl Encodable for Metadata {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(8)
+        s.begin_list(9)
             .append(&PREFIX)
             .append(&self.number_of_modules)
             .append_list(&self.hashes)
@@ -112,17 +122,18 @@ impl Encodable for Metadata {
             .append(&self.current_term_id)
             .append(&self.seq)
             .append(&self.params)
-            .append(&self.term_params);
+            .append(&self.term_params)
+            .append(&self.consensus_params);
     }
 }
 
 impl Decodable for Metadata {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
-        if item_count != 8 {
+        if item_count != 9 {
             return Err(DecoderError::RlpInvalidLength {
                 got: item_count,
-                expected: 8,
+                expected: 9,
             })
         }
 
@@ -141,6 +152,8 @@ impl Decodable for Metadata {
 
         let term_params = rlp.val_at(7)?;
 
+        let consensus_params = rlp.val_at(8)?;
+
         Ok(Self {
             number_of_modules,
             hashes,
@@ -149,6 +162,7 @@ impl Decodable for Metadata {
             seq,
             params,
             term_params,
+            consensus_params,
         })
     }
 }
@@ -215,6 +229,7 @@ mod tests {
             seq: 3,
             params: CommonParams::default_for_test(),
             term_params: CommonParams::default_for_test(),
+            consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
     }
@@ -229,6 +244,7 @@ mod tests {
             seq: 0,
             params: CommonParams::default_for_test(),
             term_params: CommonParams::default_for_test(),
+            consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
     }
@@ -243,6 +259,7 @@ mod tests {
             seq: 3,
             params: CommonParams::default_for_test(),
             term_params: CommonParams::default_for_test(),
+            consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
     }
