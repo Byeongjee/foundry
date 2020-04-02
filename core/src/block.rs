@@ -188,8 +188,8 @@ impl<'x> OpenBlock<'x> {
         self.block.tx_events = tx_events;
         self.block.block_events = block_events;
 
-        let next_validator_set = block_outcome.updated_consensus_params.validators;
-        self.close_impl(&next_validator_set)
+        let updated_validator_set = block_outcome.updated_validator_set;
+        self.close_impl(updated_validator_set)
     }
 
     /// Populate self from a header.
@@ -201,7 +201,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Turn this into a `ClosedBlock`.
-    fn close_impl(mut self, next_validator_set: &CompactValidatorSet) -> Result<ClosedBlock, Error> {
+    fn close_impl(mut self, updated_validator_set: CompactValidatorSet) -> Result<ClosedBlock, Error> {
         if let Err(e) = self.engine.on_close_block(&mut self.block) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
@@ -213,7 +213,7 @@ impl<'x> OpenBlock<'x> {
         })?;
         self.block.header.set_state_root(state_root);
 
-        self.block.header.set_next_validator_set_hash(next_validator_set.hash());
+        self.block.header.set_next_validator_set_hash(updated_validator_set.hash());
 
         if self.block.header.transactions_root() == &BLAKE_NULL_RLP {
             self.block.header.set_transactions_root(skewed_merkle_root(

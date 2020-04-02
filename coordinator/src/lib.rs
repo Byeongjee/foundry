@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_variables)]
 use context::SubStorageAccess;
+use ctypes::{CompactValidatorSet, ConsensusParams};
 use std::unimplemented;
 use validator::*;
 
@@ -15,7 +16,7 @@ pub mod validator;
 pub struct Coordinator {}
 
 impl validator::Validator for Coordinator {
-    fn initialize_chain(&self) -> ConsensusParams {
+    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
         unimplemented!()
     }
 
