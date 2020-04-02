@@ -33,7 +33,7 @@ use ckey::Address;
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{update_validator_weights, CurrentValidators, NextValidators, TopState, TopStateView};
-use ctypes::{BlockHash, Header};
+use ctypes::{BlockHash, ConsensusParams, Header};
 use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::{Arc, Weak};
 
@@ -117,7 +117,11 @@ impl ConsensusEngine for Tendermint {
         Ok(())
     }
 
-    fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
+    fn on_close_block(
+        &self,
+        block: &mut ExecutedBlock,
+        updated_consensus_params: ConsensusParams,
+    ) -> Result<(), Error> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
 
         let parent_hash = *block.header().parent_hash();
@@ -147,6 +151,7 @@ impl ConsensusEngine for Tendermint {
         validators.save_to_state(state)?;
 
         state.update_term_params()?;
+        state.update_consensus_params(updated_consensus_params)?;
         Ok(())
     }
 

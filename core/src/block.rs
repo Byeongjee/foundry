@@ -23,7 +23,7 @@ use coordinator::Coordinator;
 use cstate::{StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{CompactValidatorSet, TxHash};
+use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -189,7 +189,8 @@ impl<'x> OpenBlock<'x> {
         self.block.block_events = block_events;
 
         let updated_validator_set = block_outcome.updated_validator_set;
-        self.close_impl(updated_validator_set)
+        let updated_consensus_params = block_outcome.updated_consensus_params;
+        self.close_impl(updated_validator_set, updated_consensus_params)
     }
 
     /// Populate self from a header.
@@ -201,8 +202,12 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Turn this into a `ClosedBlock`.
-    fn close_impl(mut self, updated_validator_set: CompactValidatorSet) -> Result<ClosedBlock, Error> {
-        if let Err(e) = self.engine.on_close_block(&mut self.block) {
+    fn close_impl(
+        mut self,
+        updated_validator_set: CompactValidatorSet,
+        updated_consensus_params: ConsensusParams,
+    ) -> Result<ClosedBlock, Error> {
+        if let Err(e) = self.engine.on_close_block(&mut self.block, updated_consensus_params) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
         }

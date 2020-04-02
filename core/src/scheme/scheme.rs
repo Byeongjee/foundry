@@ -22,7 +22,7 @@ use crate::error::{Error, SchemeError};
 use ccrypto::{blake256, BLAKE_NULL_RLP};
 use cdb::{AsHashDB, HashDB};
 use ckey::Address;
-use cstate::{Metadata, MetadataAddress, StateDB, StateResult};
+use cstate::{Metadata, MetadataAddress, StateDB};
 use ctypes::errors::SyntaxError;
 use ctypes::{BlockHash, CommonParams, ConsensusParams, Header};
 use merkle_trie::{TrieFactory, TrieMut};
