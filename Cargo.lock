@@ -1089,6 +1089,7 @@ dependencies = [
  "codechain-sync",
  "codechain-timer",
  "codechain-types",
+ "coordinator",
  "crossbeam-channel 0.3.8",
  "ctrlc",
  "env_logger 0.5.10",
