@@ -39,7 +39,7 @@ impl validator::Validator for Coordinator {
     fn fetch_transactions_for_block<'a>(
         &self,
         transactions: Vec<&'a TransactionWithMetadata>,
-    ) -> Vec<&'a TransactionWithGas> {
+    ) -> Vec<TransactionWithGas<'a>> {
         unimplemented!()
     }
 
