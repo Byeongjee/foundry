@@ -25,14 +25,14 @@ use crate::scheme::Scheme;
 use crate::transaction::PendingTransactions;
 use crate::types::{BlockId, TransactionId};
 use ckey::Address;
-use coordinator::validator::{Transaction, TxOrigin};
-use coordinator::Coordinator;
+use coordinator::validator::{Transaction, TxOrigin, Validator};
 use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
 use ctypes::{BlockHash, TxHash};
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
+use std::borrow::Borrow;
 use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -90,7 +90,7 @@ pub struct Miner {
     engine: Arc<dyn ConsensusEngine>,
     options: MinerOptions,
     sealing_enabled: AtomicBool,
-    coordinator: Arc<Coordinator>,
+    validator: Arc<dyn Validator>,
 }
 
 impl Miner {
@@ -98,19 +98,19 @@ impl Miner {
         options: MinerOptions,
         scheme: &Scheme,
         db: Arc<dyn KeyValueDB>,
-        coordinator: Arc<Coordinator>,
+        validator: Arc<dyn Validator>,
     ) -> Arc<Self> {
-        Arc::new(Self::new_raw(options, scheme, db, coordinator))
+        Arc::new(Self::new_raw(options, scheme, db, validator))
     }
 
-    pub fn with_scheme(scheme: &Scheme, db: Arc<dyn KeyValueDB>, coordinator: Arc<Coordinator>) -> Self {
-        Self::new_raw(Default::default(), scheme, db, coordinator)
+    pub fn with_scheme(scheme: &Scheme, db: Arc<dyn KeyValueDB>, validator: Arc<dyn Validator>) -> Self {
+        Self::new_raw(Default::default(), scheme, db, validator)
     }
 
-    fn new_raw(options: MinerOptions, scheme: &Scheme, db: Arc<dyn KeyValueDB>, coordinator: Arc<Coordinator>) -> Self {
+    fn new_raw(options: MinerOptions, scheme: &Scheme, db: Arc<dyn KeyValueDB>, validator: Arc<dyn Validator>) -> Self {
         let mem_limit = options.mem_pool_memory_limit.unwrap_or_else(usize::max_value);
         let mem_pool =
-            Arc::new(RwLock::new(MemPool::with_limits(options.mem_pool_size, mem_limit, db, coordinator.clone())));
+            Arc::new(RwLock::new(MemPool::with_limits(options.mem_pool_size, mem_limit, db, validator.clone())));
 
         Self {
             mem_pool,
@@ -120,7 +120,7 @@ impl Miner {
             engine: scheme.engine.clone(),
             options,
             sealing_enabled: AtomicBool::new(true),
-            coordinator,
+            validator,
         }
     }
 
@@ -234,11 +234,11 @@ impl Miner {
 
         let evidences = self.engine.fetch_evidences();
 
-        let coordinator = &self.coordinator;
+        let validator = self.validator.borrow();
 
-        open_block.open(&coordinator, evidences);
-        open_block.execute_transactions(coordinator, transactions);
-        let closed_block = open_block.close(coordinator)?;
+        open_block.open(validator, evidences);
+        open_block.execute_transactions(validator, transactions);
+        let closed_block = open_block.close(validator)?;
         Ok(Some(closed_block))
     }
 
