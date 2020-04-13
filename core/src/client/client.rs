@@ -34,7 +34,7 @@ use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
-use coordinator::validator::{Event, Transaction, Validator};
+use coordinator::validator::{BlockExecutor, Event, Transaction};
 use cstate::{StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
@@ -79,7 +79,7 @@ impl Client {
         scheme: &Scheme,
         db: Arc<dyn KeyValueDB>,
         miner: Arc<Miner>,
-        validator: Arc<dyn Validator>,
+        block_executor: Arc<dyn BlockExecutor>,
         message_channel: IoChannel<ClientIoMessage>,
         reseal_timer: TimerApi,
     ) -> Result<Arc<Client>, Error> {
@@ -102,7 +102,7 @@ impl Client {
 
         let engine = scheme.engine.clone();
 
-        let importer = Importer::try_new(config, engine.clone(), message_channel.clone(), miner, validator)?;
+        let importer = Importer::try_new(config, engine.clone(), message_channel.clone(), miner, block_executor)?;
 
         let client = Arc::new(Client {
             engine,

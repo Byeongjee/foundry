@@ -32,11 +32,13 @@ pub mod validator;
 #[derive(Default)]
 pub struct Coordinator {}
 
-impl validator::Validator for Coordinator {
-    fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams) {
+impl Coordinator {
+    pub fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams) {
         unimplemented!()
     }
+}
 
+impl BlockExecutor for Coordinator {
     fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, verified_crime: &[VerifiedCrime]) {
         unimplemented!()
     }
@@ -48,7 +50,9 @@ impl validator::Validator for Coordinator {
     fn close_block(&self, context: &mut dyn SubStorageAccess) -> BlockOutcome {
         unimplemented!()
     }
+}
 
+impl TxFilter for Coordinator {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode> {
         unimplemented!()
     }
@@ -69,8 +73,6 @@ impl validator::Validator for Coordinator {
         unimplemented!()
     }
 }
-
-impl Coordinator {}
 
 pub struct Builder<C: context::Context> {
     context: C,

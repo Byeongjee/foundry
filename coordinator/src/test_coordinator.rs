@@ -28,6 +28,11 @@ pub struct TestCoordinator {
     body_size: AtomicUsize,
 }
 
+impl TestCoordinator {
+    pub fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams) {
+        unimplemented!()
+    }
+}
 impl Default for TestCoordinator {
     fn default() -> Self {
         Self {
@@ -39,10 +44,7 @@ impl Default for TestCoordinator {
     }
 }
 
-impl Validator for TestCoordinator {
-    fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams) {
-        unimplemented!()
-    }
+impl BlockExecutor for TestCoordinator {
     fn open_block(&self, _context: &mut dyn SubStorageAccess, _header: &Header, _verified_crime: &[VerifiedCrime]) {
         self.body_count.store(0, Ordering::SeqCst);
         self.body_size.store(0, Ordering::SeqCst);
@@ -68,7 +70,9 @@ impl Validator for TestCoordinator {
             events: Vec::new(),
         }
     }
+}
 
+impl TxFilter for TestCoordinator {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode> {
         if transaction.size() > self.consensus_params.max_body_size() {
             Err(1)

@@ -25,7 +25,7 @@ use crate::scheme::Scheme;
 use crate::transaction::PendingTransactions;
 use crate::types::{BlockId, TransactionId};
 use ckey::Address;
-use coordinator::validator::{Transaction, TxOrigin, Validator};
+use coordinator::validator::{BlockExecutor, Transaction, TxFilter, TxOrigin};
 use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
 use ctypes::{BlockHash, TxHash};
@@ -90,27 +90,36 @@ pub struct Miner {
     engine: Arc<dyn ConsensusEngine>,
     options: MinerOptions,
     sealing_enabled: AtomicBool,
-    validator: Arc<dyn Validator>,
+    block_executor: Arc<dyn BlockExecutor>,
 }
 
 impl Miner {
-    pub fn new(
+    pub fn new<C: 'static + BlockExecutor + TxFilter>(
         options: MinerOptions,
         scheme: &Scheme,
         db: Arc<dyn KeyValueDB>,
-        validator: Arc<dyn Validator>,
+        coordinator: Arc<C>,
     ) -> Arc<Self> {
-        Arc::new(Self::new_raw(options, scheme, db, validator))
+        Arc::new(Self::new_raw(options, scheme, db, coordinator))
     }
 
-    pub fn with_scheme(scheme: &Scheme, db: Arc<dyn KeyValueDB>, validator: Arc<dyn Validator>) -> Self {
-        Self::new_raw(Default::default(), scheme, db, validator)
+    pub fn with_scheme<C: 'static + BlockExecutor + TxFilter>(
+        scheme: &Scheme,
+        db: Arc<dyn KeyValueDB>,
+        coordinator: Arc<C>,
+    ) -> Self {
+        Self::new_raw(Default::default(), scheme, db, coordinator)
     }
 
-    fn new_raw(options: MinerOptions, scheme: &Scheme, db: Arc<dyn KeyValueDB>, validator: Arc<dyn Validator>) -> Self {
+    fn new_raw<C: 'static + BlockExecutor + TxFilter>(
+        options: MinerOptions,
+        scheme: &Scheme,
+        db: Arc<dyn KeyValueDB>,
+        coordinator: Arc<C>,
+    ) -> Self {
         let mem_limit = options.mem_pool_memory_limit.unwrap_or_else(usize::max_value);
         let mem_pool =
-            Arc::new(RwLock::new(MemPool::with_limits(options.mem_pool_size, mem_limit, db, validator.clone())));
+            Arc::new(RwLock::new(MemPool::with_limits(options.mem_pool_size, mem_limit, db, coordinator.clone())));
 
         Self {
             mem_pool,
@@ -120,7 +129,7 @@ impl Miner {
             engine: scheme.engine.clone(),
             options,
             sealing_enabled: AtomicBool::new(true),
-            validator,
+            block_executor: coordinator,
         }
     }
 
@@ -234,11 +243,11 @@ impl Miner {
 
         let evidences = self.engine.fetch_evidences();
 
-        let validator = self.validator.borrow();
+        let block_executor = self.block_executor.borrow();
 
-        open_block.open(validator, evidences);
-        open_block.execute_transactions(validator, transactions);
-        let closed_block = open_block.close(validator)?;
+        open_block.open(block_executor, evidences);
+        open_block.execute_transactions(block_executor, transactions);
+        let closed_block = open_block.close(block_executor)?;
         Ok(Some(closed_block))
     }
 
@@ -471,7 +480,7 @@ impl MinerService for Miner {
 pub mod test {
     use cio::IoService;
     use coordinator::test_coordinator::TestCoordinator;
-    use coordinator::validator::{Transaction, Validator};
+    use coordinator::validator::{BlockExecutor, Transaction};
     use ctimer::TimerLoop;
 
     use super::super::super::client::ClientConfig;
@@ -482,13 +491,13 @@ pub mod test {
 
     #[test]
     fn check_add_transactions_result_idx() {
-        let validator = Arc::new(TestCoordinator::default());
+        let coordinator = Arc::new(TestCoordinator::default());
         let db = Arc::new(kvdb_memorydb::create(NUM_COLUMNS.unwrap()));
         let scheme = Scheme::new_test();
-        let miner = Arc::new(Miner::with_scheme(&scheme, db.clone(), validator.clone()));
+        let miner = Arc::new(Miner::with_scheme(&scheme, db.clone(), coordinator.clone()));
 
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), validator.clone());
-        let client = generate_test_client(db, Arc::clone(&miner), &scheme, validator).unwrap();
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), coordinator.clone());
+        let client = generate_test_client(db, Arc::clone(&miner), &scheme, coordinator).unwrap();
 
         let transaction1 = Transaction::new("sample".to_string(), vec![1, 2, 3, 4, 5]);
         let transaction2 = Transaction::new("sample".to_string(), vec![5, 4, 3, 2, 1]);
@@ -505,7 +514,7 @@ pub mod test {
         db: Arc<dyn KeyValueDB>,
         miner: Arc<Miner>,
         scheme: &Scheme,
-        validator: Arc<dyn Validator>,
+        block_executor: Arc<dyn BlockExecutor>,
     ) -> Result<Arc<Client>, Error> {
         let timer_loop = TimerLoop::new(2);
 
@@ -513,6 +522,6 @@ pub mod test {
         let reseal_timer = timer_loop.new_timer_with_name("Client reseal timer");
         let io_service = IoService::<ClientIoMessage>::start("Client")?;
 
-        Client::try_new(&client_config, scheme, db, miner, validator, io_service.channel(), reseal_timer)
+        Client::try_new(&client_config, scheme, db, miner, block_executor, io_service.channel(), reseal_timer)
     }
 }

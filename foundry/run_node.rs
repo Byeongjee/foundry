@@ -33,7 +33,6 @@ use ckeystore::KeyStore;
 use clap::ArgMatches;
 use clogger::{EmailAlarm, LoggerConfig};
 use cnetwork::{Filters, ManagingPeerdb, NetworkConfig, NetworkControl, NetworkService, RoutingTable, SocketAddr};
-use coordinator::validator::Validator;
 use coordinator::Coordinator;
 use crossbeam::unbounded;
 use crossbeam_channel as crossbeam;
