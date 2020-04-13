@@ -15,14 +15,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #![allow(dead_code, unused_variables)]
+use self::traits::{BlockExecutor, TxFilter};
+use self::types::*;
 use context::SubStorageAccess;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use std::unimplemented;
-use validator::*;
 
 pub mod context;
 pub mod test_coordinator;
-pub mod validator;
+pub mod traits;
+pub mod types;
 
 /// The `Coordinator` encapsulates all the logic for a Foundry application.
 ///

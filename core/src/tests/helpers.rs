@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::scheme::Scheme;
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use ctypes::{BlockHash, Header};
 use primitives::Bytes;
 use rlp::RlpStream;

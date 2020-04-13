@@ -34,7 +34,8 @@ use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
-use coordinator::validator::{BlockExecutor, Event, Transaction};
+use coordinator::traits::BlockExecutor;
+use coordinator::types::{Event, Transaction};
 use cstate::{StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;

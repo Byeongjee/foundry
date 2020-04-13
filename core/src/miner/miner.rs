@@ -25,7 +25,8 @@ use crate::scheme::Scheme;
 use crate::transaction::PendingTransactions;
 use crate::types::{BlockId, TransactionId};
 use ckey::Address;
-use coordinator::validator::{BlockExecutor, Transaction, TxFilter, TxOrigin};
+use coordinator::traits::{BlockExecutor, TxFilter};
+use coordinator::types::{Transaction, TxOrigin};
 use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
 use ctypes::{BlockHash, TxHash};
@@ -480,7 +481,7 @@ impl MinerService for Miner {
 pub mod test {
     use cio::IoService;
     use coordinator::test_coordinator::TestCoordinator;
-    use coordinator::validator::{BlockExecutor, Transaction};
+    use coordinator::{traits::BlockExecutor, types::Transaction};
     use ctimer::TimerLoop;
 
     use super::super::super::client::ClientConfig;

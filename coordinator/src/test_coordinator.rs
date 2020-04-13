@@ -15,7 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::context::SubStorageAccess;
-use super::validator::*;
+use super::traits::{BlockExecutor, TxFilter};
+use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
