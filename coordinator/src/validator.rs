@@ -285,7 +285,7 @@ pub trait TxFilter: Send + Sync {
         &self,
         transactions: Vec<&'a TransactionWithMetadata>,
     ) -> Vec<TransactionWithGas<'a>>;
-    fn remove_transactions<'a>(
+    fn filter_transactions<'a>(
         &self,
         transactions: Vec<&'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
